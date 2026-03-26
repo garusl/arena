@@ -66,6 +66,7 @@
         }
         .fighter h2 { margin: 0 0 5px 0; text-align: center; }
         .level-info { text-align: center; color: #bdc3c7; font-size: 0.9em; margin-bottom: 10px; border-bottom: 2px solid #7f8c8d; padding-bottom: 10px; }
+        .injury-text { color: #e74c3c; font-weight: bold; text-align: center; margin-bottom: 10px; font-size: 0.95em; display: none; line-height: 1.4; }
 
         /* Инвентарь (Рюкзак) */
         .inventory-panel { background-color: #2c3e50; border: 1px solid #9b59b6; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
@@ -96,7 +97,7 @@
         .hp-bar-container { width: 100%; background-color: #c0392b; border-radius: 10px; height: 25px; overflow: hidden; border: 2px solid #2c3e50; position: relative; }
         .hp-bar { height: 100%; background-color: #2ecc71; width: 100%; transition: width 0.3s ease-in-out; }
         .hp-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 1.1em; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; }
-        .combo-effect-text { text-align: center; font-size: 1em; font-weight: bold; color: #9b59b6; min-height: 24px; margin-top: 5px; transition: opacity 0.3s ease-out; opacity: 0; text-shadow: 0 0 5px rgba(0, 0, 0, 0.8); }
+        .combo-effect-text { text-align: center; font-size: 1em; font-weight: bold; color: #9b59b6; min-height: 24px; margin-bottom: 5px; transition: opacity 0.3s ease-out; opacity: 0; text-shadow: 0 0 5px rgba(0, 0, 0, 0.8); }
 
         .exp-bar-container { width: 100%; background-color: #2c3e50; border-radius: 5px; height: 10px; overflow: hidden; margin-top: 5px; }
         .exp-bar { height: 100%; background-color: #9b59b6; width: 0%; transition: width 0.5s; }
@@ -207,6 +208,7 @@
                         | Опыт: <span id="exp-p1">0</span> / <span id="maxexp-p1">720</span>
                         <div class="exp-bar-container"><div class="exp-bar" id="exp-bar-p1"></div></div>
                     </div>
+                    <div id="injury-p1" class="injury-text"></div>
                     
                     <div class="inventory-panel" id="inventory-p1"></div>
 
@@ -219,11 +221,11 @@
                     <div class="stats" id="stats-p1"></div>
                     
                     <div class="hp-bar-wrapper">
+                        <div class="combo-effect-text" id="combo-effect-p1"></div>
                         <div class="hp-bar-container">
                             <div class="hp-bar" id="hp-bar-1"></div>
                             <div class="hp-text"><span id="hp-text-1">100</span> / <span id="max-hp-text-1">100</span> HP</div>
                         </div>
-                        <div class="combo-effect-text" id="combo-effect-p1"></div>
                     </div>
 
                     <div class="combo-tracker" id="tracker-p1">Серия: -</div>
@@ -257,11 +259,11 @@
                     <div class="stats" id="stats-p2"></div>
                     
                     <div class="hp-bar-wrapper">
+                        <div class="combo-effect-text" id="combo-effect-p2"></div>
                         <div class="hp-bar-container">
                             <div class="hp-bar" id="hp-bar-2"></div>
                             <div class="hp-text"><span id="hp-text-2">100</span> / <span id="max-hp-text-2">100</span> HP</div>
                         </div>
-                        <div class="combo-effect-text" id="combo-effect-p2"></div>
                     </div>
                     
                     <div class="combo-tracker" id="tracker-p2">Серия: -</div>
@@ -340,6 +342,25 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО ЛЕЧЕНИЯ ТРАВМ -->
+    <div id="heal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:#2c3e50; padding:20px; border-radius:10px; border:2px solid #e67e22; width:300px; text-align:center;">
+            <h3 style="color:#e67e22; margin-top:0;">Использовать Свиток</h3>
+            <p style="font-size:0.9em;">Выберите часть тела для лечения:</p>
+            <select id="heal-modal-select" style="width:100%; padding:5px; margin-bottom:10px; background:#34495e; color:white; border:1px solid #7f8c8d;">
+                <option value="head">Голова</option>
+                <option value="chest">Корпус</option>
+                <option value="arms">Руки</option>
+                <option value="legs">Ноги</option>
+            </select>
+            <div id="heal-modal-msg" style="color:#e74c3c; font-weight:bold; min-height:20px; margin-bottom:10px; font-size:0.9em;"></div>
+            <div style="display:flex; justify-content:space-between;">
+                <button class="btn-system" style="background:#e74c3c;" onclick="closeHealModal()">Отмена</button>
+                <button class="btn-system" style="background:#2ecc71;" onclick="applyHeal()">Лечить</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ИНИЦИАЛИЗАЦИЯ SUPABASE
         const SUPABASE_URL = 'https://lwguqrzljvohbmpaewgj.supabase.co';
@@ -365,6 +386,7 @@
         const zones = ['head', 'chest', 'legs'];
         const zoneNames = { 'head': 'в голову', 'chest': 'в корпус', 'legs': 'в ноги' };
         const statNamesRU = { str: 'Сил', agi: 'Лов', int: 'Инт', def: 'Защ', vit: 'Жиз', ini: 'Ини', crit: '%Крит', dodge: '%Уворот', block: '%Блок', minDmg: 'МинУр', maxDmg: 'МаксУр' };
+        const bodyPartsRU = { 'head': 'Голова', 'chest': 'Корпус', 'arms': 'Руки', 'legs': 'Ноги' };
 
         const comboDB = [
             { id: 1, title: '«Сила Волка»', seq: ['head', 'head', 'chest'], type: 'addDmg', value: 2 },
@@ -376,6 +398,14 @@
         const slotsConfig = [
             { id: 'head', name: 'Голова' }, { id: 'armor', name: 'Корпус' }, { id: 'weapon', name: 'Пр. рука' },
             { id: 'shield', name: 'Лев. рука' }, { id: 'foot', name: 'Обувь' }, { id: 'belt', name: 'Пояс (Зелья)' }
+        ];
+
+        // БАЗА ТРАВМ (с привязкой к частям тела)
+        const injuriesDB = [
+            { id: 'inj1', name: 'Сотрясение', part: 'head', stats: { int: -2, ini: -2 } },
+            { id: 'inj2', name: 'Перелом руки', part: 'arms', stats: { str: -2, def: -2 } },
+            { id: 'inj3', name: 'Вывих ноги', part: 'legs', stats: { agi: -2, dodge: -3 } },
+            { id: 'inj4', name: 'Тяжелая рана', part: 'chest', stats: { vit: -2, block: -3 } }
         ];
 
         const itemsRegistry = {
@@ -390,6 +420,9 @@
                 { id: 'r2', name: 'Руна Жизни', price: 15000, stats: { vit: 1 } }, 
                 { id: 'r3', name: 'Руна Интуиции', price: 15000, stats: { int: 1 } },
                 { id: 'r4', name: 'Руна Защиты', price: 15000, stats: { def: 1 } } 
+            ],
+            consumables: [
+                { id: 'c1', name: 'Свиток Исцеления', price: 5000, stats: {}, type: 'heal_injury' }
             ]
         };
 
@@ -442,7 +475,8 @@
             return item;
         }
 
-        function formatStatsForSelect(stats, potion) {
+        function formatStatsForSelect(stats, potion, type) {
+            if (type === 'heal_injury') return `Лечит травму на 1 части тела`;
             if (potion) return `Восст. ${Math.round(potion.healPercent * 100)}% HP (${potion.count} шт)`;
             if (!stats || Object.keys(stats).length === 0) return 'Без статов';
             let parts = [];
@@ -461,8 +495,9 @@
             baseStats: { ...baseStatsTemplate }, 
             inventory: [ createItemInst(itemsRegistry['weapon'][0]), createItemInst(itemsRegistry['belt'][0]) ], 
             equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null }, 
-            quests: [], // Активные и пройденные квесты { id, progress, status }
-            hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0
+            quests: [], 
+            hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0,
+            injuries: {} // Формат: { head: { id: 'inj1', expiresAt: 12345 }, chest: ... }
         };
 
         let p2 = {
@@ -470,11 +505,12 @@
             monsterId: 'morok',
             baseStats: { ...baseStatsTemplate }, inventory: [],
             equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null }, 
-            hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0
+            hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0,
+            injuries: {}
         };
 
         let roundCount = 1; let attacksThisRound = 0; let gameOver = false; let activePlayer = null; let battleStarted = false;
-        let potionCooldownTimer = null; let potionHealTimer = null;
+        let potionCooldownTimer = null; let potionHealTimer = null; let injuryDotTimer = null;
 
         // --- СИСТЕМА СОХРАНЕНИЙ (SUPABASE) ---
         async function saveGameProgress() {
@@ -482,7 +518,8 @@
             const saveData = {
                 level: p1.level, exp: p1.exp, money: p1.money,
                 baseStats: p1.baseStats, inventory: p1.inventory,
-                equipment: p1.equipment, quests: p1.quests
+                equipment: p1.equipment, quests: p1.quests,
+                injuries: p1.injuries
             };
             const { error } = await supabaseClient.from('saves').upsert({ id: currentUser.id, game_data: saveData });
             if (error) console.error("Ошибка сохранения:", error.message);
@@ -499,6 +536,7 @@
                 if (s.inventory) p1.inventory = s.inventory;
                 if (s.equipment) p1.equipment = s.equipment;
                 if (s.quests) p1.quests = s.quests; else p1.quests = [];
+                if (s.injuries !== undefined) p1.injuries = s.injuries; else p1.injuries = {};
             } else if (error && error.code !== 'PGRST116') {
                 console.error("Ошибка загрузки:", error.message);
             }
@@ -548,7 +586,7 @@
             let html = '';
             questsDB.forEach(dbQ => {
                 let pQ = p1.quests.find(x => x.id === dbQ.id);
-                let status = pQ ? pQ.status : 'available'; // 'available', 'active', 'completed'
+                let status = pQ ? pQ.status : 'available'; 
                 let currentProgress = getQuestProgressCount(dbQ);
                 let isReadyToClaim = (status === 'active' && currentProgress >= dbQ.targetCount);
 
@@ -606,7 +644,6 @@
             let dbQ = questsDB.find(x => x.id === questId);
             if (!pQ || !dbQ || pQ.status !== 'active') return;
 
-            // Изымаем предметы для квестов на сбор
             if (dbQ.targetType === 'collect') {
                 let removed = 0;
                 for (let i = p1.inventory.length - 1; i >= 0; i--) {
@@ -617,7 +654,6 @@
                 }
             }
 
-            // Выдаем награду
             p1.exp += dbQ.rewardExp;
             p1.money += dbQ.rewardMoney;
             if (dbQ.rewardItem) {
@@ -628,11 +664,9 @@
 
             pQ.status = 'completed';
             
-            // Проверяем уровень
             let levelUpLogs = [];
             checkLevelUp(levelUpLogs);
             if (levelUpLogs.length > 0) {
-                // Если был левелап, покажем его в логах боя (или можно алертом, но логи лучше)
                 let log = document.getElementById("battleLog");
                 log.insertAdjacentHTML('afterbegin', levelUpLogs.join(''));
             }
@@ -736,12 +770,47 @@
             saveGameProgress();
         }
 
+        // --- ОКНО ЛЕЧЕНИЯ ТРАВМ ---
+        let activeHealIndex = null;
+        function useConsumable(index) {
+            if (battleStarted) return;
+            let item = p1.inventory[index];
+            if (item.type === 'heal_injury') {
+                activeHealIndex = index;
+                document.getElementById('heal-modal-msg').innerText = '';
+                document.getElementById('heal-modal').style.display = 'flex';
+            }
+        }
+        function closeHealModal() {
+            document.getElementById('heal-modal').style.display = 'none';
+            activeHealIndex = null;
+        }
+        function applyHeal() {
+            let part = document.getElementById('heal-modal-select').value;
+            if (!p1.injuries || !p1.injuries[part]) {
+                document.getElementById('heal-modal-msg').innerText = "Там травмы нет!";
+                setTimeout(() => { document.getElementById('heal-modal-msg').innerText = ""; }, 2000);
+                return;
+            }
+            // Удаляем травму и тратим предмет
+            delete p1.injuries[part];
+            let scrollName = p1.inventory[activeHealIndex].name;
+            p1.inventory.splice(activeHealIndex, 1);
+            closeHealModal();
+            
+            let log = document.getElementById("battleLog");
+            log.insertAdjacentHTML('afterbegin', `<p style="color:#2ecc71; font-weight:bold;">✨ Вы использовали ${scrollName} и вылечили травму (${bodyPartsRU[part]})!</p>`);
+            
+            updateUI();
+            saveGameProgress();
+        }
+
         function renderShop() {
             document.getElementById('shop-money-display').innerHTML = formatMoney(p1.money);
             let buyHtml = '';
             for (let slotId in itemsRegistry) {
                 itemsRegistry[slotId].forEach(item => {
-                    let statStr = formatStatsForSelect(item.stats, item.potion);
+                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
                     buyHtml += `<div class="shop-item"><div class="shop-item-info"><span class="shop-item-name">${item.name}</span><span class="shop-item-stats">${statStr}</span><span class="shop-item-price">${formatMoney(item.price)}</span></div><button class="btn-stat-plus" style="width:auto; padding: 5px 10px; height:auto; background:#2980b9;" onclick="buyItem('${slotId}', '${item.id}')">Купить</button></div>`;
                 });
             }
@@ -751,9 +820,9 @@
             if (p1.inventory.length === 0) sellHtml = '<p style="text-align:center; color:#7f8c8d;">В рюкзаке нет вещей для продажи</p>';
             else {
                 p1.inventory.forEach((item, index) => {
-                    let statStr = formatStatsForSelect(item.stats, item.potion);
+                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
                     let baseItem = itemsRegistry[item.slot].find(i => i.id === item.id);
-                    let sellPrice = Math.floor(baseItem.price / 2);
+                    let sellPrice = Math.floor((baseItem.price + (item.addedPrice || 0)) / 2);
                     sellHtml += `<div class="shop-item" style="border-left: 3px solid #27ae60;"><div class="shop-item-info"><span class="shop-item-name">${item.name}</span><span class="shop-item-stats">${statStr}</span><span class="shop-item-price">Скупка: ${formatMoney(sellPrice)}</span></div><button class="btn-stat-minus" style="width:auto; padding: 5px 10px; height:auto;" onclick="sellItem(${index})">Продать</button></div>`;
                 });
             }
@@ -765,9 +834,11 @@
             if (p1.inventory.length === 0) html += '<p style="text-align:center; color:#7f8c8d; font-size:0.9em; margin: 10px 0;">Рюкзак пуст</p>';
             else {
                 p1.inventory.forEach((item, index) => {
-                    let statStr = formatStatsForSelect(item.stats, item.potion);
+                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
                     if (item.slot === 'runes') {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #8e44ad;" onclick="openRuneModal(${index})" ${battleStarted ? 'disabled' : ''}>Встроить</button></div>`;
+                    } else if (item.slot === 'consumables') {
+                        html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #e67e22;" onclick="useConsumable(${index})" ${battleStarted ? 'disabled' : ''}>Использ.</button></div>`;
                     } else {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`;
                     }
@@ -786,7 +857,7 @@
                 if (itemsRegistry[slot.id]) {
                     itemsRegistry[slot.id].forEach(item => {
                         let selected = (player.equipment[slot.id] && player.equipment[slot.id].id === item.id) ? 'selected' : '';
-                        let statStr = formatStatsForSelect(item.stats, item.potion);
+                        let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
                         html += `<option value="${item.id}" ${selected}>${item.name} (${statStr})</option>`;
                     });
                 }
@@ -842,14 +913,11 @@
             select.innerHTML = '';
             let hasValidItems = false;
             
-            // Ищем вещи только в рюкзаке (inventory)
             p1.inventory.forEach((item) => {
-                // Исключаем зелья (belt) и другие руны (runes)
-                if (item.slot === 'belt' || item.slot === 'runes') return;
+                if (item.slot === 'belt' || item.slot === 'runes' || item.slot === 'consumables') return;
                 
                 hasValidItems = true;
                 let slotName = slotsConfig.find(s => s.id === item.slot).name;
-                // В value передаем уникальный идентификатор вещи (uid)
                 select.innerHTML += `<option value="${item.uid}">${slotName}: ${item.name}</option>`;
             });
             
@@ -873,7 +941,6 @@
             }
             
             let rune = p1.inventory[activeRuneIndex];
-            // Ищем вещь в рюкзаке по её uid
             let item = p1.inventory.find(i => i.uid == targetUid);
             
             if (!item) {
@@ -881,7 +948,6 @@
                 return;
             }
             
-            // Добавляем статы руны к вещи
             if (!item.stats) item.stats = {};
             for (let k in rune.stats) {
                 item.stats[k] = (item.stats[k] || 0) + rune.stats[k];
@@ -890,7 +956,6 @@
             item.name = item.name + ' ✨';
             item.addedPrice = (item.addedPrice || 0) + rune.price;
             
-            // Удаляем руну из инвентаря
             p1.inventory.splice(activeRuneIndex, 1);
             
             closeRuneModal();
@@ -901,6 +966,8 @@
         function getTotalStats(player) {
             let total = { ...player.baseStats, bonusCrit: 0, bonusDodge: 0, bonusBlock: 0, bonusMinDmg: 0, bonusMaxDmg: 0 };
             total.itemBonus = { str: 0, agi: 0, int: 0, def: 0, vit: 0, ini: 0, crit: 0, dodge: 0, block: 0, minDmg: 0, maxDmg: 0 };
+            total.injuryBonus = { str: 0, agi: 0, int: 0, def: 0, vit: 0, ini: 0, crit: 0, dodge: 0, block: 0, minDmg: 0, maxDmg: 0 };
+            
             Object.values(player.equipment).forEach(item => {
                 if (!item) return;
                 let mod = item.stats;
@@ -916,6 +983,28 @@
                 if(mod.minDmg !== undefined) { total.bonusMinDmg += mod.minDmg; total.itemBonus.minDmg += mod.minDmg; }
                 if(mod.maxDmg !== undefined) { total.bonusMaxDmg += mod.maxDmg; total.itemBonus.maxDmg += mod.maxDmg; }
             });
+
+            // Применяем штрафы от всех активных травм
+            if (player.injuries) {
+                for (let part in player.injuries) {
+                    if (player.injuries[part]) {
+                        let injDef = injuriesDB.find(i => i.id === player.injuries[part].id);
+                        if (injDef) {
+                            let mod = injDef.stats;
+                            if(mod.str !== undefined) { total.str += mod.str; total.injuryBonus.str += mod.str; }
+                            if(mod.agi !== undefined) { total.agi += mod.agi; total.injuryBonus.agi += mod.agi; }
+                            if(mod.int !== undefined) { total.int += mod.int; total.injuryBonus.int += mod.int; }
+                            if(mod.def !== undefined) { total.def += mod.def; total.injuryBonus.def += mod.def; }
+                            if(mod.vit !== undefined) { total.vit += mod.vit; total.injuryBonus.vit += mod.vit; }
+                            if(mod.ini !== undefined) { total.ini += mod.ini; total.injuryBonus.ini += mod.ini; }
+                            if(mod.crit !== undefined) { total.bonusCrit += mod.crit; total.injuryBonus.crit += mod.crit; }
+                            if(mod.dodge !== undefined) { total.bonusDodge += mod.dodge; total.injuryBonus.dodge += mod.dodge; }
+                            if(mod.block !== undefined) { total.bonusBlock += mod.block; total.injuryBonus.block += mod.block; }
+                        }
+                    }
+                }
+            }
+
             total.maxHp = Math.floor(70 + (total.vit * 5));
             return total;
         }
@@ -948,17 +1037,52 @@
             document.getElementById('exp-bar-p1').style.width = expPercent + '%';
             document.getElementById('lvl-p2').innerText = p2.level;
 
+            // Очистка просроченных травм и их отображение
+            let hasInjuries = false;
+            let injHtml = '';
+            if (p1.injuries) {
+                let now = Date.now();
+                for (let part in p1.injuries) {
+                    if (p1.injuries[part]) {
+                        if (now >= p1.injuries[part].expiresAt) {
+                            delete p1.injuries[part]; // Удаляем, если время вышло
+                        } else {
+                            hasInjuries = true;
+                            let injDef = injuriesDB.find(i => i.id === p1.injuries[part].id);
+                            let minLeft = Math.ceil((p1.injuries[part].expiresAt - now) / 60000);
+                            injHtml += `🩸 ${bodyPartsRU[part]}: ${injDef.name} (${minLeft} мин)<br>`;
+                        }
+                    }
+                }
+            }
+
+            let injDiv = document.getElementById('injury-p1');
+            if (hasInjuries) {
+                injDiv.innerHTML = injHtml;
+                injDiv.style.display = 'block';
+            } else {
+                injDiv.style.display = 'none';
+            }
+
             let stats1 = getTotalStats(p1); let stats2 = getTotalStats(p2);
-            let dodge1 = Math.max(0, Math.floor(5 + (stats1.agi * 3) - (stats2.str * 0.5))) + stats1.bonusDodge + p1.baseStats.dodge;
-            let block1 = 5 + Math.floor(stats1.def * 1.5) + stats1.bonusBlock + p1.baseStats.block;
-            let crit1 = 5 + (stats1.int * 2) + stats1.bonusCrit + p1.baseStats.crit;
-            let dodge2 = Math.max(0, Math.floor(5 + (stats2.agi * 3) - (stats1.str * 0.5))) + stats2.bonusDodge + p2.baseStats.dodge;
-            let block2 = 5 + Math.floor(stats2.def * 1.5) + stats2.bonusBlock + p2.baseStats.block;
-            let crit2 = 5 + (stats2.int * 2) + stats2.bonusCrit + p2.baseStats.crit;
+            
+            let dodge1 = Math.max(0, Math.floor(5 + (stats1.agi * 3) - (stats2.str * 0.5))) + stats1.bonusDodge + p1.baseStats.dodge + stats1.injuryBonus.dodge;
+            let block1 = 5 + Math.floor(stats1.def * 1.5) + stats1.bonusBlock + p1.baseStats.block + stats1.injuryBonus.block;
+            let crit1 = 5 + (stats1.int * 2) + stats1.bonusCrit + p1.baseStats.crit + stats1.injuryBonus.crit;
+            
+            let dodge2 = Math.max(0, Math.floor(5 + (stats2.agi * 3) - (stats1.str * 0.5))) + stats2.bonusDodge + p2.baseStats.dodge + stats2.injuryBonus.dodge;
+            let block2 = 5 + Math.floor(stats2.def * 1.5) + stats2.bonusBlock + p2.baseStats.block + stats2.injuryBonus.block;
+            let crit2 = 5 + (stats2.int * 2) + stats2.bonusCrit + p2.baseStats.crit + stats2.injuryBonus.crit;
+            
             let dmg1 = getCalculatedDamage(stats1); let dmg2 = getCalculatedDamage(stats2);
 
-            const buildStatHtml = (pId, base, b, mD1, mD2, cr, dg, bl) => {
-                let rBonus = (v) => v === 0 ? "" : `<span style="color: #f39c12; font-weight: bold; margin-left: 4px;">(${v > 0 ? '+' : ''}${v})</span>`;
+            const buildStatHtml = (pId, base, b, injB, mD1, mD2, cr, dg, bl) => {
+                let rBonus = (v, inj) => {
+                    let res = "";
+                    if (v !== 0) res += `<span style="color: #f39c12; font-weight: bold; margin-left: 4px;">(${v > 0 ? '+' : ''}${v})</span>`;
+                    if (inj !== 0 && inj !== undefined) res += `<span style="color: #e74c3c; font-weight: bold; margin-left: 4px;">(${inj})</span>`;
+                    return res;
+                };
                 let bBtn = (k, isPlus) => {
                     let cl = isPlus ? 'btn-stat-plus' : 'btn-stat-minus';
                     let sign = isPlus ? '+' : '-';
@@ -966,21 +1090,21 @@
                     return `<button class="${cl}" onclick="changeStat(${pId}, '${k}', ${d})">${sign}</button>`;
                 };
                 return `
-                    Сила: ${bBtn('str',false)}${base.str}${bBtn('str',true)}${rBonus(b.str)} -> Урон: ${mD1}-${mD2}<br>
-                    Ловкость: ${bBtn('agi',false)}${base.agi}${bBtn('agi',true)}${rBonus(b.agi)}<br>
-                    Интуиция: ${bBtn('int',false)}${base.int}${bBtn('int',true)}${rBonus(b.int)}<br>
-                    Защита: ${bBtn('def',false)}${base.def}${bBtn('def',true)}${rBonus(b.def)}<br>
-                    Жизнь: ${bBtn('vit',false)}${base.vit}${bBtn('vit',true)}${rBonus(b.vit)}<br>
-                    Инициатива: ${bBtn('ini',false)}${base.ini}${bBtn('ini',true)}${rBonus(b.ini)}
+                    Сила: ${bBtn('str',false)}${base.str}${bBtn('str',true)}${rBonus(b.str, injB.str)} -> Урон: ${mD1}-${mD2}<br>
+                    Ловкость: ${bBtn('agi',false)}${base.agi}${bBtn('agi',true)}${rBonus(b.agi, injB.agi)}<br>
+                    Интуиция: ${bBtn('int',false)}${base.int}${bBtn('int',true)}${rBonus(b.int, injB.int)}<br>
+                    Защита: ${bBtn('def',false)}${base.def}${bBtn('def',true)}${rBonus(b.def, injB.def)}<br>
+                    Жизнь: ${bBtn('vit',false)}${base.vit}${bBtn('vit',true)}${rBonus(b.vit, injB.vit)}<br>
+                    Инициатива: ${bBtn('ini',false)}${base.ini}${bBtn('ini',true)}${rBonus(b.ini, injB.ini)}
                     <hr style="border: 0; border-top: 1px dashed #7f8c8d; margin: 8px 0;">
-                    Шанс крита: ${bBtn('crit',false)}<b style="color:#e74c3c;">${cr}%</b>${bBtn('crit',true)}${rBonus(b.crit)}<br>
-                    Шанс уворота: ${bBtn('dodge',false)}<b style="color:#3498db;">${dg}%</b>${bBtn('dodge',true)}${rBonus(b.dodge)}<br>
-                    Шанс блока: ${bBtn('block',false)}<b style="color:#e67e22;">${bl}%</b>${bBtn('block',true)}${rBonus(b.block)}
+                    Шанс крита: ${bBtn('crit',false)}<b style="color:#e74c3c;">${cr}%</b>${bBtn('crit',true)}${rBonus(b.crit, injB.crit)}<br>
+                    Шанс уворота: ${bBtn('dodge',false)}<b style="color:#3498db;">${dg}%</b>${bBtn('dodge',true)}${rBonus(b.dodge, injB.dodge)}<br>
+                    Шанс блока: ${bBtn('block',false)}<b style="color:#e67e22;">${bl}%</b>${bBtn('block',true)}${rBonus(b.block, injB.block)}
                 `;
             };
 
-            document.getElementById("stats-p1").innerHTML = buildStatHtml(1, p1.baseStats, stats1.itemBonus, dmg1.min, dmg1.max, crit1, dodge1, block1);
-            document.getElementById("stats-p2").innerHTML = buildStatHtml(2, p2.baseStats, stats2.itemBonus, dmg2.min, dmg2.max, crit2, dodge2, block2);
+            document.getElementById("stats-p1").innerHTML = buildStatHtml(1, p1.baseStats, stats1.itemBonus, stats1.injuryBonus, dmg1.min, dmg1.max, crit1, dodge1, block1);
+            document.getElementById("stats-p2").innerHTML = buildStatHtml(2, p2.baseStats, stats2.itemBonus, stats2.injuryBonus, dmg2.min, dmg2.max, crit2, dodge2, block2);
 
             document.getElementById("hp-text-1").innerText = Math.floor(p1.hp); document.getElementById("max-hp-text-1").innerText = stats1.maxHp;
             document.getElementById("hp-text-2").innerText = Math.floor(p2.hp); document.getElementById("max-hp-text-2").innerText = stats2.maxHp;
@@ -1085,11 +1209,12 @@
             return comboLog + logMsg;
         }
 
-        // --- ЛОГИКА ЭЛИКСИРОВ ---
-        function clearPotionTimers() {
+        // --- ЛОГИКА ЭЛИКСИРОВ И ТРАВМ В БОЮ ---
+        function clearBattleTimers() {
             if (potionCooldownTimer) clearInterval(potionCooldownTimer);
             if (potionHealTimer) clearInterval(potionHealTimer);
-            potionCooldownTimer = null; potionHealTimer = null;
+            if (injuryDotTimer) clearInterval(injuryDotTimer);
+            potionCooldownTimer = null; potionHealTimer = null; injuryDotTimer = null;
         }
 
         function drinkPotion() {
@@ -1105,7 +1230,7 @@
             let log = document.getElementById("battleLog");
             log.insertAdjacentHTML('afterbegin', `<p><span class="log-heal">🍷 ${p1.name} выпивает эликсир! Восстановление здоровья началось... (+${healPerSec} HP каждую 1 сек)</span></p>`);
             
-            updatePotionUI(); clearPotionTimers();
+            updatePotionUI();
 
             potionHealTimer = setInterval(() => {
                 if (gameOver || !battleStarted) { clearInterval(potionHealTimer); return; }
@@ -1156,9 +1281,12 @@
             let log = document.getElementById("battleLog");
             if (attacksThisRound === 0) log.insertAdjacentHTML('afterbegin', `<p style="color:#f39c12;"><b>--- Раунд ${roundCount} ---</b></p>`);
 
-            log.insertAdjacentHTML('afterbegin', `<p>${calculateAttack(p2, p1, zones[Math.floor(Math.random() * zones.length)])}</p>`);
+            let attackLog = calculateAttack(p2, p1, zones[Math.floor(Math.random() * zones.length)]);
+            log.insertAdjacentHTML('afterbegin', `<p>${attackLog}</p>`);
             updateUI();
-            if (p1.hp <= 0) { loseBattle(); return; }
+            
+            // Проверяем, был ли смертельный удар критом, и передаем это знание дальше
+            if (p1.hp <= 0) { loseBattle(attackLog.includes('КРИТ!')); return; }
 
             checkRoundEnd(); activePlayer = p1; setButtonsEnabled(true);
         }
@@ -1207,15 +1335,38 @@
             saveGameProgress(); 
         }
 
-        function loseBattle() {
+        function loseBattle(diedFromCrit = false) {
             gameOver = true; battleStarted = false;
-            endBattleUI(`<p class="log-kill" style="color:#e74c3c;">☠️ ПОРАЖЕНИЕ! Вы пали в бою.</p>`);
+            let msg = `<p class="log-kill" style="color:#e74c3c;">☠️ ПОРАЖЕНИЕ! Вы пали в бою.</p>`;
+            
+            // Механика получения травмы (30% шанс, ТОЛЬКО если убит критом)
+            if (diedFromCrit && Math.random() < 0.3) {
+                let randomInj = injuriesDB[Math.floor(Math.random() * injuriesDB.length)];
+                if (!p1.injuries) p1.injuries = {};
+                
+                let now = Date.now();
+                let currentExp = p1.injuries[randomInj.part] && p1.injuries[randomInj.part].expiresAt > now 
+                                 ? p1.injuries[randomInj.part].expiresAt 
+                                 : now;
+                                 
+                // Ставим или продлеваем травму на 30 минут
+                p1.injuries[randomInj.part] = {
+                    id: randomInj.id,
+                    expiresAt: currentExp + 30 * 60 * 1000 
+                };
+                
+                let minLeft = Math.ceil((p1.injuries[randomInj.part].expiresAt - now) / 60000);
+                msg += `<p style="color:#e74c3c; font-weight:bold; font-size:1.1em;">🩸 Вы получили серьезную травму (${bodyPartsRU[randomInj.part]}): ${randomInj.name}! (Всего: ${minLeft} мин)</p>`;
+            }
+
+            endBattleUI(msg);
+            saveGameProgress();
         }
 
         function endBattleUI(msg) {
             let log = document.getElementById("battleLog");
             log.insertAdjacentHTML('afterbegin', msg);
-            setButtonsEnabled(false); clearPotionTimers();
+            setButtonsEnabled(false); clearBattleTimers();
             document.getElementById("startBattleBtn").style.display = "block";
             document.getElementById("combatPanel").style.display = "none";
             updateUI();
@@ -1224,7 +1375,7 @@
         function resetBattle(fullHeal = false) {
             gameOver = false; battleStarted = false; roundCount = 1; attacksThisRound = 0;
             p1.hitHistory = []; p2.hitHistory = [];
-            clearPotionTimers(); p1.potionCooldown = 0;
+            clearBattleTimers(); p1.potionCooldown = 0;
             
             document.getElementById("combo-effect-p1").style.opacity = 0;
             document.getElementById("combo-effect-p2").style.opacity = 0;
@@ -1243,7 +1394,35 @@
             battleStarted = true;
 
             if (p1.equipment.belt) p1.potionCount = p1.equipment.belt.potion.count; else p1.potionCount = 0;
-            p1.potionCooldown = 0; clearPotionTimers(); updatePotionUI();
+            p1.potionCooldown = 0; clearBattleTimers(); updatePotionUI();
+
+            // Запускаем кровотечение от травм
+            let activeInjuriesCount = p1.injuries ? Object.values(p1.injuries).filter(i => i).length : 0;
+            let log = document.getElementById("battleLog");
+            if (activeInjuriesCount > 0) {
+                log.innerHTML = `<p><span style="color:#e74c3c; font-weight:bold;">🩸 Внимание: Ваши раны открылись! Первая потеря крови через 5 сек...</span></p>`;
+                
+                injuryDotTimer = setInterval(() => {
+                    if (gameOver || !battleStarted) { clearInterval(injuryDotTimer); return; }
+                    let currentInjuriesCount = p1.injuries ? Object.values(p1.injuries).filter(i => i).length : 0;
+                    if (currentInjuriesCount > 0) {
+                        let dmg = currentInjuriesCount * 2;
+                        let actualDmg = Math.min(dmg, p1.hp); // Ограничиваем урон остатком HP
+                        p1.hp -= actualDmg;
+                        if (p1.hp < 0) p1.hp = 0;
+                        updateUI();
+                        let bLog = document.getElementById("battleLog");
+                        bLog.insertAdjacentHTML('afterbegin', `<p><span style="color:#e74c3c;">🩸 Кровотечение: Вы теряете ${actualDmg} HP из-за травм!</span></p>`);
+                        showComboEffectText(1, `💔 -${actualDmg} HP (Кровотечение)`, '#e74c3c');
+                        // Смерть от кровотечения никогда не дает новую травму (передаем false)
+                        if (p1.hp <= 0) loseBattle(false);
+                    } else {
+                        clearInterval(injuryDotTimer);
+                    }
+                }, 5000);
+            } else {
+                log.innerHTML = ``;
+            }
 
             p2.hp = getTotalStats(p2).maxHp;
             document.getElementById("combo-effect-p1").style.opacity = 0;
@@ -1251,12 +1430,11 @@
 
             document.getElementById("startBattleBtn").style.display = "none";
             document.getElementById("combatPanel").style.display = "flex";
-            document.getElementById("battleLog").innerHTML = ``;
             
             let s1 = getTotalStats(p1); let s2 = getTotalStats(p2);
             activePlayer = (s1.ini > s2.ini) ? p1 : (s2.ini > s1.ini ? p2 : (Math.random() < 0.5 ? p1 : p2));
 
-            document.getElementById("battleLog").insertAdjacentHTML('afterbegin', `<div style="color:#7f8c8d;">(Начало боя. Первым бьет ${activePlayer.name})</div>`);
+            log.insertAdjacentHTML('afterbegin', `<div style="color:#7f8c8d;">(Начало боя. Первым бьет ${activePlayer.name})</div>`);
             updateUI();
             
             if (activePlayer === p2) { setButtonsEnabled(false); setTimeout(botAttack, 800); } 
