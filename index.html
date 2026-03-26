@@ -327,6 +327,19 @@
 
     </div>
 
+    <!-- МОДАЛЬНОЕ ОКНО РУН -->
+    <div id="rune-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center;">
+        <div style="background:#2c3e50; padding:20px; border-radius:10px; border:2px solid #8e44ad; width:300px; text-align:center;">
+            <h3 style="color:#9b59b6; margin-top:0;">Встроить Руну</h3>
+            <p id="rune-modal-desc" style="font-size:0.9em;"></p>
+            <select id="rune-modal-select" style="width:100%; padding:5px; margin-bottom:15px; background:#34495e; color:white; border:1px solid #7f8c8d;"></select>
+            <div style="display:flex; justify-content:space-between;">
+                <button class="btn-system" style="background:#e74c3c;" onclick="closeRuneModal()">Отмена</button>
+                <button class="btn-system" style="background:#2ecc71;" onclick="applyRune()">Встроить</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ИНИЦИАЛИЗАЦИЯ SUPABASE
         const SUPABASE_URL = 'https://lwguqrzljvohbmpaewgj.supabase.co';
@@ -371,7 +384,13 @@
             weapon: [ { id: 'w1', name: 'Кинжал Убийцы', price: 12000, stats: { int: 4, minDmg: 3, maxDmg: 8, crit: 5 } }, { id: 'w2', name: 'Копье Призрака', price: 12000, stats: { agi: 4, minDmg: 4, maxDmg: 6, dodge: 4 } }, { id: 'w3', name: 'Молот Скалы', price: 12000, stats: { str: 5, minDmg: 5, maxDmg: 10, dodge: -2 } } ],
             shield: [ { id: 's1', name: 'Офхенд Убийцы', price: 8000, stats: { int: 1, crit: 2 } }, { id: 's2', name: 'Офхенд Призрака', price: 8000, stats: { agi: 1, dodge: 2 } }, { id: 's3', name: 'Щит Скалы', price: 8000, stats: { def: 4, block: 8, minDmg: -1, maxDmg: -1 } } ],
             foot: [ { id: 'f1', name: 'Сапоги Убийцы', price: 6000, stats: { int: 2, ini: 1, def: 1 } }, { id: 'f2', name: 'Сапоги Призрака', price: 6000, stats: { agi: 2, dodge: 2, def: 1 } }, { id: 'f3', name: 'Сапоги Скалы', price: 6000, stats: { def: 2, block: 2, vit: 1 } } ],
-            belt: [ { id: 'pot1', name: 'Эликсир Жизни (3 шт)', price: 3000, stats: {}, potion: { count: 3, healPercent: 0.3 } } ]
+            belt: [ { id: 'pot1', name: 'Эликсир Жизни (3 шт)', price: 3000, stats: {}, potion: { count: 3, healPercent: 0.3 } } ],
+            runes: [ 
+                { id: 'r1', name: 'Руна Силы', price: 15000, stats: { str: 1 } }, 
+                { id: 'r2', name: 'Руна Жизни', price: 15000, stats: { vit: 1 } }, 
+                { id: 'r3', name: 'Руна Интуиции', price: 15000, stats: { int: 1 } },
+                { id: 'r4', name: 'Руна Защиты', price: 15000, stats: { def: 1 } } 
+            ]
         };
 
         // --- БЕСТИАРИЙ ---
@@ -710,7 +729,7 @@
         function sellItem(invIndex) {
             let item = p1.inventory[invIndex];
             let baseItem = itemsRegistry[item.slot].find(i => i.id === item.id);
-            let sellPrice = Math.floor(baseItem.price / 2);
+            let sellPrice = Math.floor((baseItem.price + (item.addedPrice || 0)) / 2);
             p1.money += sellPrice;
             p1.inventory.splice(invIndex, 1);
             renderShop();
@@ -747,7 +766,11 @@
             else {
                 p1.inventory.forEach((item, index) => {
                     let statStr = formatStatsForSelect(item.stats, item.potion);
-                    html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`;
+                    if (item.slot === 'runes') {
+                        html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #8e44ad;" onclick="openRuneModal(${index})" ${battleStarted ? 'disabled' : ''}>Встроить</button></div>`;
+                    } else {
+                        html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`;
+                    }
                 });
             }
             html += '</div>';
@@ -804,6 +827,75 @@
             }
             updateUI();
             if(playerId === 1) saveGameProgress();
+        }
+
+        // --- МЕХАНИКА РУН ---
+        let activeRuneIndex = null;
+        
+        function openRuneModal(index) {
+            if (battleStarted) return;
+            let rune = p1.inventory[index];
+            activeRuneIndex = index;
+            document.getElementById('rune-modal-desc').innerText = `Куда встроить "${rune.name}"?`;
+            
+            let select = document.getElementById('rune-modal-select');
+            select.innerHTML = '';
+            let hasValidItems = false;
+            
+            // Ищем вещи только в рюкзаке (inventory)
+            p1.inventory.forEach((item) => {
+                // Исключаем зелья (belt) и другие руны (runes)
+                if (item.slot === 'belt' || item.slot === 'runes') return;
+                
+                hasValidItems = true;
+                let slotName = slotsConfig.find(s => s.id === item.slot).name;
+                // В value передаем уникальный идентификатор вещи (uid)
+                select.innerHTML += `<option value="${item.uid}">${slotName}: ${item.name}</option>`;
+            });
+            
+            if (!hasValidItems) {
+                select.innerHTML = '<option value="">Нет подходящих вещей в рюкзаке!</option>';
+            }
+            
+            document.getElementById('rune-modal').style.display = 'flex';
+        }
+
+        function closeRuneModal() {
+            document.getElementById('rune-modal').style.display = 'none';
+            activeRuneIndex = null;
+        }
+
+        function applyRune() {
+            let targetUid = document.getElementById('rune-modal-select').value;
+            if (!targetUid) {
+                closeRuneModal();
+                return;
+            }
+            
+            let rune = p1.inventory[activeRuneIndex];
+            // Ищем вещь в рюкзаке по её uid
+            let item = p1.inventory.find(i => i.uid == targetUid);
+            
+            if (!item) {
+                closeRuneModal();
+                return;
+            }
+            
+            // Добавляем статы руны к вещи
+            if (!item.stats) item.stats = {};
+            for (let k in rune.stats) {
+                item.stats[k] = (item.stats[k] || 0) + rune.stats[k];
+            }
+            
+            item.name = item.name + ' ✨';
+            item.addedPrice = (item.addedPrice || 0) + rune.price;
+            
+            // Удаляем руну из инвентаря
+            p1.inventory.splice(activeRuneIndex, 1);
+            
+            closeRuneModal();
+            updateUI();
+            saveGameProgress();
         }
 
         function getTotalStats(player) {
