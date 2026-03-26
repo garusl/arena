@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Арена: Онлайн Сохранения</title>
+    <title>Арена: Онлайн Сохранения и Квесты</title>
     <!-- Подключаем библиотеку Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -135,8 +135,8 @@
         .inv-list::-webkit-scrollbar-track, .log-box::-webkit-scrollbar-track, .shop-list::-webkit-scrollbar-track { background: #ecf0f1; border-radius: 4px; }
         .inv-list::-webkit-scrollbar-thumb, .log-box::-webkit-scrollbar-thumb, .shop-list::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
 
-        /* МАГАЗИН */
-        .shop-container { width: 100%; max-width: 1100px; display: none; flex-direction: column; gap: 20px; }
+        /* МАГАЗИН И КВЕСТЫ */
+        .full-container { width: 100%; max-width: 1100px; display: none; flex-direction: column; gap: 20px; }
         .shop-header { text-align: center; color: #f1c40f; font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }
         .shop-flex { display: flex; gap: 30px; width: 100%; }
         .shop-panel { flex: 1; background-color: #34495e; border-radius: 10px; padding: 15px; border: 2px solid; }
@@ -149,6 +149,17 @@
         .shop-item-stats { color: #bdc3c7; font-size: 0.8em; }
         .shop-item-price { color: #f1c40f; font-weight: bold; font-size: 0.9em; }
         .shop-msg { text-align: center; font-weight: bold; min-height: 20px; color: #e74c3c; margin-top: -10px; margin-bottom: 10px;}
+
+        /* Стили карточки квеста */
+        .quest-card { background: #34495e; border: 2px solid #3498db; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .quest-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #7f8c8d; padding-bottom: 5px; }
+        .quest-title { font-weight: bold; color: #3498db; font-size: 1.2em; }
+        .quest-status { font-size: 0.9em; font-weight: bold; }
+        .quest-desc { color: #ecf0f1; font-size: 0.95em; }
+        .quest-rewards { font-size: 0.9em; color: #f1c40f; }
+        .quest-progress-bar { background: #2c3e50; border-radius: 5px; height: 15px; width: 100%; position: relative; overflow: hidden; }
+        .quest-progress-fill { background: #3498db; height: 100%; transition: width 0.3s; }
+        .quest-progress-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 0.8em; line-height: 15px; color: white; font-weight: bold;}
 
         .coin-gold { color: #f1c40f; font-weight: bold; }
         .coin-silver { color: #bdc3c7; font-weight: bold; }
@@ -179,6 +190,7 @@
         <div class="tabs">
             <button id="tab-btn-arena" class="tab-btn active" onclick="switchTab('arena')">⚔️ Арена</button>
             <button id="tab-btn-shop" class="tab-btn" onclick="switchTab('shop')">💰 Магазин</button>
+            <button id="tab-btn-quests" class="tab-btn" onclick="switchTab('quests')">📜 Квесты</button>
         </div>
 
         <!-- ВКЛАДКА: АРЕНА -->
@@ -219,7 +231,14 @@
 
                 <!-- БОЕЦ 2 -->
                 <div class="fighter" id="fighter2-card">
-                    <h2>Бот (Морок)</h2>
+                    <h2 style="margin-bottom: 10px;">
+                        <select id="monster-select" onchange="selectMonster(this.value)" style="font-size: 0.8em; padding: 5px; border-radius: 5px; background: #2c3e50; color: #f1c40f; border: 1px solid #f1c40f; outline: none; font-weight: bold; cursor: pointer;">
+                            <option value="kret">🐭 Кретс-малыш (1 ур.)</option>
+                            <option value="morok" selected>🤺 Бот Морок (1 ур.)</option>
+                            <option value="zigred">🐝 Зигред (2 ур.)</option>
+                            <option value="thug">🥷 Головорез (3 ур.)</option>
+                        </select>
+                    </h2>
                     <div class="level-info">
                         Уровень: 
                         <button class="btn-stat-minus" onclick="changeLevel(2, -1)">-</button>
@@ -282,7 +301,7 @@
         </div>
 
         <!-- ВКЛАДКА: МАГАЗИН -->
-        <div id="shop-tab" class="shop-container">
+        <div id="shop-tab" class="full-container">
             <div class="shop-header">Баланс: <span id="shop-money-display">0</span></div>
             <div id="shop-msg" class="shop-msg"></div>
 
@@ -295,6 +314,14 @@
                     <h3 style="color: #2ecc71; text-align: center; margin-top:0;">Скупка (Продать из рюкзака)</h3>
                     <div class="shop-list" id="shop-sell-list"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА: КВЕСТЫ -->
+        <div id="quests-tab" class="full-container" style="max-width: 800px;">
+            <div class="shop-header" style="color: #3498db;">Доска объявлений (Квесты)</div>
+            <div id="quests-list" style="width: 100%;">
+                <!-- Квесты генерируются через JS -->
             </div>
         </div>
 
@@ -321,7 +348,6 @@
         }
 
         const expTable = [0, 0, 720, 4500, 21564, 90864, 198864]; 
-        const expPerWin = 300; 
         const baseStatsTemplate = { str: 6, agi: 6, int: 6, def: 6, vit: 6, ini: 0, crit: 0, dodge: 0, block: 0 };
         const zones = ['head', 'chest', 'legs'];
         const zoneNames = { 'head': 'в голову', 'chest': 'в корпус', 'legs': 'в ноги' };
@@ -347,6 +373,48 @@
             foot: [ { id: 'f1', name: 'Сапоги Убийцы', price: 6000, stats: { int: 2, ini: 1, def: 1 } }, { id: 'f2', name: 'Сапоги Призрака', price: 6000, stats: { agi: 2, dodge: 2, def: 1 } }, { id: 'f3', name: 'Сапоги Скалы', price: 6000, stats: { def: 2, block: 2, vit: 1 } } ],
             belt: [ { id: 'pot1', name: 'Эликсир Жизни (3 шт)', price: 3000, stats: {}, potion: { count: 3, healPercent: 0.3 } } ]
         };
+
+        // --- БЕСТИАРИЙ ---
+        const bestiaryDB = [
+            {
+                id: 'kret', name: 'Кретс-малыш', level: 1, dropChance: 0.2, expReward: 150, moneyReward: { min: 200, max: 500 },
+                baseStats: { str: 4, agi: 4, int: 2, def: 2, vit: 5, ini: 0, crit: 0, dodge: 0, block: 0 }
+            },
+            {
+                id: 'morok', name: 'Бот (Морок)', level: 1, dropChance: 0.6, expReward: 300, moneyReward: { min: 910, max: 1500 },
+                baseStats: { ...baseStatsTemplate }
+            },
+            {
+                id: 'zigred', name: 'Зигред', level: 2, dropChance: 0.5, expReward: 450, moneyReward: { min: 1500, max: 3000 },
+                baseStats: { str: 7, agi: 9, int: 4, def: 4, vit: 8, ini: 5, crit: 2, dodge: 5, block: 0 }
+            },
+            {
+                id: 'thug', name: 'Головорез', level: 3, dropChance: 0.7, expReward: 800, moneyReward: { min: 3500, max: 6000 },
+                baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5 }
+            }
+        ];
+
+        // --- КВЕСТЫ (БД) ---
+        const questsDB = [
+            { 
+                id: 'q1', title: 'Очистка подвала', 
+                desc: 'Трактирщик жалуется на вредителей. Убейте 3 Кретсов-малышей.', 
+                targetType: 'kill', targetId: 'kret', targetCount: 3, 
+                rewardExp: 500, rewardMoney: 2000 // 20 серебра
+            },
+            { 
+                id: 'q2', title: 'Угроза с воздуха', 
+                desc: 'Зигреды нападают на караваны. Уничтожьте 2 Зигредов.', 
+                targetType: 'kill', targetId: 'zigred', targetCount: 2, 
+                rewardExp: 800, rewardMoney: 3000, rewardItem: 'pot1' // + Эликсир
+            },
+            { 
+                id: 'q3', title: 'Экипировка стражи', 
+                desc: 'Для городской стражи требуется снаряжение. Добудьте 2 Шлема Призрака (выбейте или купите).', 
+                targetType: 'collect', targetId: 'h2', targetCount: 2, 
+                rewardExp: 200, rewardMoney: 10000 // 1 золотой
+            }
+        ];
 
         function createItemInst(baseItem) {
             let item = JSON.parse(JSON.stringify(baseItem));
@@ -374,11 +442,13 @@
             baseStats: { ...baseStatsTemplate }, 
             inventory: [ createItemInst(itemsRegistry['weapon'][0]), createItemInst(itemsRegistry['belt'][0]) ], 
             equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null }, 
+            quests: [], // Активные и пройденные квесты { id, progress, status }
             hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0
         };
 
         let p2 = {
-            id: 2, name: "Бот", level: 1, exp: 0, money: 0,
+            id: 2, name: "Бот (Морок)", level: 1, exp: 0, money: 0,
+            monsterId: 'morok',
             baseStats: { ...baseStatsTemplate }, inventory: [],
             equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null }, 
             hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0
@@ -391,12 +461,9 @@
         async function saveGameProgress() {
             if (!currentUser) return;
             const saveData = {
-                level: p1.level,
-                exp: p1.exp,
-                money: p1.money,
-                baseStats: p1.baseStats,
-                inventory: p1.inventory,
-                equipment: p1.equipment
+                level: p1.level, exp: p1.exp, money: p1.money,
+                baseStats: p1.baseStats, inventory: p1.inventory,
+                equipment: p1.equipment, quests: p1.quests
             };
             const { error } = await supabaseClient.from('saves').upsert({ id: currentUser.id, game_data: saveData });
             if (error) console.error("Ошибка сохранения:", error.message);
@@ -412,10 +479,10 @@
                 if (s.baseStats) p1.baseStats = s.baseStats;
                 if (s.inventory) p1.inventory = s.inventory;
                 if (s.equipment) p1.equipment = s.equipment;
+                if (s.quests) p1.quests = s.quests; else p1.quests = [];
             } else if (error && error.code !== 'PGRST116') {
                 console.error("Ошибка загрузки:", error.message);
             }
-            // Если сохранения не было, создаем начальное (с ножом)
             saveGameProgress();
             updateUI();
         }
@@ -426,15 +493,14 @@
 
         async function handleGuestLogin() {
             const { data, error } = await supabaseClient.auth.signInAnonymously();
-            if (error) showAuthError("Ошибка входа: " + error.message + " (Убедитесь, что в Supabase включен Anonymous Sign-In)");
+            if (error) showAuthError("Ошибка входа: " + error.message);
         }
 
         async function handleLogout() {
             await supabaseClient.auth.signOut();
-            location.reload(); // Перезагружаем для очистки
+            location.reload(); 
         }
 
-        // Подписка на изменение статуса авторизации
         supabaseClient.auth.onAuthStateChange((event, session) => {
             if (session && session.user) {
                 currentUser = session.user;
@@ -449,8 +515,151 @@
             }
         });
 
+        // --- ЛОГИКА КВЕСТОВ ---
+        function getQuestProgressCount(dbQ) {
+            let pQ = p1.quests.find(x => x.id === dbQ.id);
+            if (!pQ) return 0;
+            if (dbQ.targetType === 'collect') {
+                return p1.inventory.filter(i => i.id === dbQ.targetId).length;
+            }
+            return pQ.progress;
+        }
+
+        function renderQuests() {
+            let html = '';
+            questsDB.forEach(dbQ => {
+                let pQ = p1.quests.find(x => x.id === dbQ.id);
+                let status = pQ ? pQ.status : 'available'; // 'available', 'active', 'completed'
+                let currentProgress = getQuestProgressCount(dbQ);
+                let isReadyToClaim = (status === 'active' && currentProgress >= dbQ.targetCount);
+
+                let statusBadge = '';
+                if (status === 'completed') statusBadge = `<span style="color:#2ecc71;">✓ Выполнено</span>`;
+                else if (isReadyToClaim) statusBadge = `<span style="color:#f1c40f; animation: pulse 1.5s infinite;">🌟 Готово к сдаче</span>`;
+                else if (status === 'active') statusBadge = `<span style="color:#3498db;">В процессе</span>`;
+                else statusBadge = `<span style="color:#bdc3c7;">Доступно</span>`;
+
+                let progressPct = Math.min(100, (currentProgress / dbQ.targetCount) * 100);
+                
+                let rewardsStr = `Награда: ${dbQ.rewardExp} Опыта, ${formatMoney(dbQ.rewardMoney)}`;
+                if (dbQ.rewardItem) {
+                    let slot = Object.keys(itemsRegistry).find(key => itemsRegistry[key].some(i => i.id === dbQ.rewardItem));
+                    let bItem = itemsRegistry[slot].find(i => i.id === dbQ.rewardItem);
+                    rewardsStr += `, ${bItem.name}`;
+                }
+
+                html += `
+                    <div class="quest-card" style="border-color: ${status === 'completed' ? '#2ecc71' : (isReadyToClaim ? '#f1c40f' : '#3498db')}">
+                        <div class="quest-header">
+                            <span class="quest-title">${dbQ.title}</span>
+                            <span class="quest-status">${statusBadge}</span>
+                        </div>
+                        <div class="quest-desc">${dbQ.desc}</div>
+                        <div class="quest-rewards">${rewardsStr}</div>`;
+                
+                if (status === 'active') {
+                    html += `
+                        <div class="quest-progress-bar">
+                            <div class="quest-progress-fill" style="width: ${progressPct}%; background: ${isReadyToClaim ? '#f1c40f' : '#3498db'};"></div>
+                            <div class="quest-progress-text">${currentProgress} / ${dbQ.targetCount}</div>
+                        </div>`;
+                    
+                    if (isReadyToClaim) {
+                        html += `<button class="btn-system" style="background:#f1c40f; color:#2c3e50; font-weight:bold; margin-top:5px;" onclick="claimQuest('${dbQ.id}')">Получить награду</button>`;
+                    }
+                } else if (status === 'available') {
+                    html += `<button class="btn-system" style="background:#3498db; margin-top:5px;" onclick="takeQuest('${dbQ.id}')">Взять задание</button>`;
+                }
+
+                html += `</div>`;
+            });
+            document.getElementById('quests-list').innerHTML = html;
+        }
+
+        function takeQuest(questId) {
+            p1.quests.push({ id: questId, progress: 0, status: 'active' });
+            renderQuests();
+            saveGameProgress();
+        }
+
+        function claimQuest(questId) {
+            let pQ = p1.quests.find(x => x.id === questId);
+            let dbQ = questsDB.find(x => x.id === questId);
+            if (!pQ || !dbQ || pQ.status !== 'active') return;
+
+            // Изымаем предметы для квестов на сбор
+            if (dbQ.targetType === 'collect') {
+                let removed = 0;
+                for (let i = p1.inventory.length - 1; i >= 0; i--) {
+                    if (p1.inventory[i].id === dbQ.targetId && removed < dbQ.targetCount) {
+                        p1.inventory.splice(i, 1);
+                        removed++;
+                    }
+                }
+            }
+
+            // Выдаем награду
+            p1.exp += dbQ.rewardExp;
+            p1.money += dbQ.rewardMoney;
+            if (dbQ.rewardItem) {
+                let slot = Object.keys(itemsRegistry).find(key => itemsRegistry[key].some(i => i.id === dbQ.rewardItem));
+                let bItem = itemsRegistry[slot].find(i => i.id === dbQ.rewardItem);
+                p1.inventory.push(createItemInst(bItem));
+            }
+
+            pQ.status = 'completed';
+            
+            // Проверяем уровень
+            let levelUpLogs = [];
+            checkLevelUp(levelUpLogs);
+            if (levelUpLogs.length > 0) {
+                // Если был левелап, покажем его в логах боя (или можно алертом, но логи лучше)
+                let log = document.getElementById("battleLog");
+                log.insertAdjacentHTML('afterbegin', levelUpLogs.join(''));
+            }
+
+            updateUI();
+            renderQuests();
+            saveGameProgress();
+        }
+
 
         // --- ИГРОВЫЕ ФУНКЦИИ ---
+        function selectMonster(monsterId) {
+            if (battleStarted) return;
+            let m = bestiaryDB.find(x => x.id === monsterId);
+            if (!m) return;
+
+            p2.monsterId = m.id;
+            p2.name = m.name;
+            p2.level = m.level;
+            p2.baseStats = JSON.parse(JSON.stringify(m.baseStats));
+            unequipAll(2);
+            
+            p2.hp = getTotalStats(p2).maxHp;
+            updateUI();
+        }
+
+        function checkLevelUp(logArray) {
+            let nextExp = expTable[p1.level + 1];
+            if (nextExp && p1.exp >= nextExp) {
+                p1.level++;
+                let statsToRaise = ['str', 'agi', 'int', 'def', 'vit'];
+                statsToRaise.sort(() => 0.5 - Math.random());
+                let raised = [];
+                for(let i = 0; i < 3; i++) {
+                    p1.baseStats[statsToRaise[i]]++;
+                    raised.push(statsToRaise[i]);
+                }
+                let raisedNames = raised.map(k => statNamesRU[k]).join(', ');
+                if (logArray) {
+                    logArray.push(`<p style="color:#2ecc71; font-weight:bold; font-size:1.2em;">🌟 НОВЫЙ УРОВЕНЬ! Вы достигли ${p1.level} уровня! Автоматически повышено: ${raisedNames}.</p>`);
+                }
+                return true;
+            }
+            return false;
+        }
+
         function changeLevel(playerId, delta) {
             if (battleStarted) return;
             let player = playerId === 1 ? p1 : p2;
@@ -471,9 +680,15 @@
         function switchTab(tabId) {
             document.getElementById('arena-tab').style.display = tabId === 'arena' ? 'flex' : 'none';
             document.getElementById('shop-tab').style.display = tabId === 'shop' ? 'flex' : 'none';
+            document.getElementById('quests-tab').style.display = tabId === 'quests' ? 'flex' : 'none';
+            
             document.getElementById('tab-btn-arena').classList.toggle('active', tabId === 'arena');
             document.getElementById('tab-btn-shop').classList.toggle('active', tabId === 'shop');
-            if (tabId === 'shop') renderShop(); else updateUI(); 
+            document.getElementById('tab-btn-quests').classList.toggle('active', tabId === 'quests');
+            
+            if (tabId === 'shop') renderShop(); 
+            else if (tabId === 'quests') renderQuests();
+            else updateUI(); 
         }
 
         function showShopMsg(text) {
@@ -857,13 +1072,18 @@
         }
 
         function winBattle() {
-            gameOver = true; battleStarted = false; p1.exp += expPerWin;
-            let logMsg = `<p class="log-kill">🏆 ПОБЕДА! Вы убили бота и получили ${expPerWin} Опыта!</p>`;
+            gameOver = true; battleStarted = false; 
+            
+            let m = bestiaryDB.find(x => x.id === p2.monsterId) || bestiaryDB[1];
+            
+            p1.exp += m.expReward;
+            let logMsg = `<p class="log-kill">🏆 ПОБЕДА! Вы убили ${p2.name} и получили ${m.expReward} Опыта!</p>`;
 
-            let copperDrop = getRandomInt(910, 1500); p1.money += copperDrop;
+            let copperDrop = getRandomInt(m.moneyReward.min, m.moneyReward.max); 
+            p1.money += copperDrop;
             logMsg += `<p style="color:#f1c40f; font-weight:bold;">💰 Враг выронил ${formatMoney(copperDrop)}!</p>`;
 
-            if (Math.random() < 0.6) {
+            if (Math.random() < m.dropChance) {
                 let slotKeys = Object.keys(itemsRegistry);
                 let randomSlot = slotKeys[Math.floor(Math.random() * slotKeys.length)];
                 let randomItem = itemsRegistry[randomSlot][Math.floor(Math.random() * itemsRegistry[randomSlot].length)];
@@ -872,18 +1092,27 @@
                 logMsg += `<p style="color:#9b59b6; font-weight:bold;">🎁 Враг выронил предмет: ${droppedItem.name}! Добавлено в рюкзак.</p>`;
             }
 
-            let nextExp = expTable[p1.level + 1];
-            if (nextExp && p1.exp >= nextExp) {
-                p1.level++;
-                let statsToRaise = ['str', 'agi', 'int', 'def', 'vit'];
-                statsToRaise.sort(() => 0.5 - Math.random());
-                let raised = [];
-                for(let i = 0; i < 3; i++) { p1.baseStats[statsToRaise[i]]++; raised.push(statsToRaise[i]); }
-                let raisedNames = raised.map(k => statNamesRU[k]).join(', ');
-                logMsg += `<p style="color:#2ecc71; font-weight:bold; font-size:1.2em;">🌟 НОВЫЙ УРОВЕНЬ! Вы достигли ${p1.level} уровня! Автоматически повышено: ${raisedNames}.</p>`;
-            }
-            endBattleUI(logMsg);
-            saveGameProgress(); // Сохраняем прогресс после победы
+            // ПРОВЕРКА КВЕСТОВ (Kill)
+            let questLogs = [];
+            p1.quests.forEach(q => {
+                if (q.status === 'active') {
+                    let dbQ = questsDB.find(x => x.id === q.id);
+                    if (dbQ && dbQ.targetType === 'kill' && dbQ.targetId === p2.monsterId) {
+                        q.progress++;
+                        if (q.progress >= dbQ.targetCount) {
+                            questLogs.push(`<p style="color:#3498db; font-weight:bold; font-size:1.1em;">📜 Задание «${dbQ.title}» выполнено! Вернитесь во вкладку Квесты за наградой.</p>`);
+                        } else {
+                            questLogs.push(`<p style="color:#3498db;">📜 Прогресс задания «${dbQ.title}»: ${q.progress} / ${dbQ.targetCount}</p>`);
+                        }
+                    }
+                }
+            });
+
+            let levelUpLogs = [];
+            checkLevelUp(levelUpLogs);
+            
+            endBattleUI(logMsg + questLogs.join('') + levelUpLogs.join(''));
+            saveGameProgress(); 
         }
 
         function loseBattle() {
