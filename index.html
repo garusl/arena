@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Арена: Онлайн Сохранения и Квесты</title>
+    <title>Арена: Онлайн Сохранения и Крафт</title>
     <!-- Подключаем библиотеку Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -45,10 +45,10 @@
         .user-info { color: #bdc3c7; font-size: 0.9em; }
 
         /* Вкладки (Навигация) */
-        .tabs { display: flex; gap: 20px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
         .tab-btn {
             background-color: #8e44ad; color: white; border: 2px solid transparent;
-            padding: 12px 30px; font-size: 1.1em; font-weight: bold; border-radius: 8px;
+            padding: 10px 20px; font-size: 1.05em; font-weight: bold; border-radius: 8px;
             cursor: pointer; transition: all 0.2s;
         }
         .tab-btn.active { background-color: #9b59b6; border-color: #f1c40f; box-shadow: 0 0 10px rgba(241, 196, 15, 0.5); }
@@ -149,7 +149,7 @@
         .shop-item-name { font-weight: bold; color: #ecf0f1; font-size: 1em; }
         .shop-item-stats { color: #bdc3c7; font-size: 0.8em; }
         .shop-item-price { color: #f1c40f; font-weight: bold; font-size: 0.9em; }
-        .shop-msg { text-align: center; font-weight: bold; min-height: 20px; color: #e74c3c; margin-top: -10px; margin-bottom: 10px;}
+        .shop-msg { text-align: center; font-weight: bold; min-height: 20px; margin-top: -10px; margin-bottom: 10px;}
 
         /* Стили карточки квеста */
         .quest-card { background: #34495e; border: 2px solid #3498db; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
@@ -165,6 +165,40 @@
         .coin-gold { color: #f1c40f; font-weight: bold; }
         .coin-silver { color: #bdc3c7; font-weight: bold; }
         .coin-copper { color: #d35400; font-weight: bold; }
+
+        /* Всплывающий урон в полоске HP */
+        @keyframes floatDamage {
+            0% { opacity: 1; transform: translate(-50%, -50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) translateY(-15px) scale(1.2); }
+        }
+        .dmg-fly {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.5em;
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.8);
+            pointer-events: none;
+            animation: floatDamage 0.8s ease-out forwards;
+            z-index: 10;
+        }
+        .dmg-fly.crit {
+            color: #f1c40f;
+            font-size: 1.8em;
+        }
+        .heal-fly {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            color: #2ecc71;
+            font-weight: bold;
+            font-size: 1.5em;
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.8);
+            pointer-events: none;
+            animation: floatDamage 0.8s ease-out forwards;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -191,6 +225,7 @@
         <div class="tabs">
             <button id="tab-btn-arena" class="tab-btn active" onclick="switchTab('arena')">⚔️ Арена</button>
             <button id="tab-btn-shop" class="tab-btn" onclick="switchTab('shop')">💰 Магазин</button>
+            <button id="tab-btn-craft" class="tab-btn" onclick="switchTab('craft')">🛠 Крафт</button>
             <button id="tab-btn-quests" class="tab-btn" onclick="switchTab('quests')">📜 Квесты</button>
         </div>
 
@@ -319,6 +354,18 @@
             </div>
         </div>
 
+        <!-- ВКЛАДКА: КРАФТ (МАСТЕРСКАЯ) -->
+        <div id="craft-tab" class="full-container" style="max-width: 800px;">
+            <div class="shop-header" style="color: #e67e22;">Мастерская</div>
+            <div id="craft-msg" class="shop-msg"></div>
+            
+            <div class="shop-panel" style="border-color: #e67e22;">
+                <h3 style="color: #e67e22; text-align: center; margin-top:0;">Чертежи и Рецепты</h3>
+                <p style="text-align:center; font-size:0.85em; color:#bdc3c7; margin-top:-10px;">При создании экипировки есть 50% шанс получить Шедевр (★) с дополнительным статом!</p>
+                <div class="shop-list" id="craft-list" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
         <!-- ВКЛАДКА: КВЕСТЫ -->
         <div id="quests-tab" class="full-container" style="max-width: 800px;">
             <div class="shop-header" style="color: #3498db;">Доска объявлений (Квесты)</div>
@@ -400,7 +447,7 @@
             { id: 'shield', name: 'Лев. рука' }, { id: 'foot', name: 'Обувь' }, { id: 'belt', name: 'Пояс (Зелья)' }
         ];
 
-        // БАЗА ТРАВМ (с привязкой к частям тела)
+        // БАЗА ТРАВМ
         const injuriesDB = [
             { id: 'inj1', name: 'Сотрясение', part: 'head', stats: { int: -2, ini: -2 } },
             { id: 'inj2', name: 'Перелом руки', part: 'arms', stats: { str: -2, def: -2 } },
@@ -408,6 +455,7 @@
             { id: 'inj4', name: 'Тяжелая рана', part: 'chest', stats: { vit: -2, block: -3 } }
         ];
 
+        // БАЗА ПРЕДМЕТОВ И РЕСУРСОВ
         const itemsRegistry = {
             head: [ { id: 'h1', name: 'Шлем Убийцы', price: 5000, stats: { int: 2, crit: 3, def: 1 } }, { id: 'h2', name: 'Шлем Призрака', price: 5000, stats: { agi: 2, dodge: 3, def: 1 } }, { id: 'h3', name: 'Шлем Скалы', price: 5000, stats: { def: 3, block: 2, vit: 1 } } ],
             armor: [ { id: 'a1', name: 'Куртка Убийцы', price: 10000, stats: { int: 3, minDmg: 1, maxDmg: 2, def: 2 } }, { id: 'a2', name: 'Куртка Призрака', price: 10000, stats: { agi: 3, ini: 1, def: 2 } }, { id: 'a3', name: 'Кираса Скалы', price: 10000, stats: { def: 5, vit: 2, agi: -1 } } ],
@@ -423,25 +471,37 @@
             ],
             consumables: [
                 { id: 'c1', name: 'Свиток Исцеления', price: 5000, stats: {}, type: 'heal_injury' }
+            ],
+            materials: [
+                { id: 'm1', name: 'Обрывок кожи', price: 200, stats: {}, type: 'material' },
+                { id: 'm2', name: 'Ядовитая железа', price: 400, stats: {}, type: 'material' },
+                { id: 'm3', name: 'Обломок стали', price: 800, stats: {}, type: 'material' }
             ]
         };
+
+        // БАЗА РЕЦЕПТОВ КРАФТА
+        const recipesDB = [
+            { id: 'rec1', name: 'Сшить Сапоги Убийцы', reqType: 'm1', reqCount: 3, resultSlot: 'foot', resultId: 'f1' },
+            { id: 'rec2', name: 'Сварить Свиток Исцеления', reqType: 'm2', reqCount: 2, resultSlot: 'consumables', resultId: 'c1' },
+            { id: 'rec3', name: 'Выковать Шлем Скалы', reqType: 'm3', reqCount: 2, resultSlot: 'head', resultId: 'h3' }
+        ];
 
         // --- БЕСТИАРИЙ ---
         const bestiaryDB = [
             {
-                id: 'kret', name: 'Кретс-малыш', level: 1, dropChance: 0.2, expReward: 150, moneyReward: { min: 200, max: 500 },
+                id: 'kret', name: 'Кретс-малыш', level: 1, dropChance: 0.6, dropItem: 'm1', expReward: 150, moneyReward: { min: 200, max: 500 },
                 baseStats: { str: 4, agi: 4, int: 2, def: 2, vit: 5, ini: 0, crit: 0, dodge: 0, block: 0 }
             },
             {
-                id: 'morok', name: 'Бот (Морок)', level: 1, dropChance: 0.6, expReward: 300, moneyReward: { min: 910, max: 1500 },
+                id: 'morok', name: 'Бот (Морок)', level: 1, dropChance: 0.8, dropItem: 'm1', expReward: 300, moneyReward: { min: 910, max: 1500 },
                 baseStats: { ...baseStatsTemplate }
             },
             {
-                id: 'zigred', name: 'Зигред', level: 2, dropChance: 0.5, expReward: 450, moneyReward: { min: 1500, max: 3000 },
+                id: 'zigred', name: 'Зигред', level: 2, dropChance: 0.6, dropItem: 'm2', expReward: 450, moneyReward: { min: 1500, max: 3000 },
                 baseStats: { str: 7, agi: 9, int: 4, def: 4, vit: 8, ini: 5, crit: 2, dodge: 5, block: 0 }
             },
             {
-                id: 'thug', name: 'Головорез', level: 3, dropChance: 0.7, expReward: 800, moneyReward: { min: 3500, max: 6000 },
+                id: 'thug', name: 'Головорез', level: 3, dropChance: 0.6, dropItem: 'm3', expReward: 800, moneyReward: { min: 3500, max: 6000 },
                 baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5 }
             }
         ];
@@ -462,7 +522,7 @@
             },
             { 
                 id: 'q3', title: 'Экипировка стражи', 
-                desc: 'Для городской стражи требуется снаряжение. Добудьте 2 Шлема Призрака (выбейте или купите).', 
+                desc: 'Для городской стражи требуется снаряжение. Добудьте 2 Шлема Призрака (купите в магазине).', 
                 targetType: 'collect', targetId: 'h2', targetCount: 2, 
                 rewardExp: 200, rewardMoney: 10000 // 1 золотой
             }
@@ -476,6 +536,7 @@
         }
 
         function formatStatsForSelect(stats, potion, type) {
+            if (type === 'material') return `Сырье для крафта`;
             if (type === 'heal_injury') return `Лечит травму на 1 части тела`;
             if (potion) return `Восст. ${Math.round(potion.healPercent * 100)}% HP (${potion.count} шт)`;
             if (!stats || Object.keys(stats).length === 0) return 'Без статов';
@@ -571,6 +632,78 @@
                 document.getElementById('game-screen').style.display = 'none';
             }
         });
+
+        // --- ЛОГИКА КРАФТА ---
+        function renderCraft() {
+            let html = '';
+            recipesDB.forEach(rec => {
+                let matBase = itemsRegistry.materials.find(m => m.id === rec.reqType);
+                let pCount = p1.inventory.filter(i => i.id === rec.reqType).length;
+                let resBase = itemsRegistry[rec.resultSlot].find(i => i.id === rec.resultId);
+                
+                let canCraft = pCount >= rec.reqCount;
+                let btnColor = canCraft ? '#e67e22' : '#7f8c8d';
+                
+                html += `
+                    <div class="shop-item" style="border-left: 3px solid #e67e22;">
+                        <div class="shop-item-info">
+                            <span class="shop-item-name">${rec.name}</span>
+                            <span class="shop-item-stats">Результат: ${resBase.name}</span>
+                            <span class="shop-item-price" style="color:${canCraft ? '#2ecc71' : '#e74c3c'}">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span>
+                        </div>
+                        <button class="btn-stat-plus" style="width:auto; padding: 5px 10px; height:auto; background:${btnColor};" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button>
+                    </div>`;
+            });
+            document.getElementById('craft-list').innerHTML = html;
+        }
+
+        function showCraftMsg(text, color = '#e74c3c') {
+            let msgDiv = document.getElementById('craft-msg');
+            msgDiv.style.color = color;
+            msgDiv.innerText = text;
+            setTimeout(() => { msgDiv.innerText = ""; }, 3500);
+        }
+
+        function craftItem(recId) {
+            let rec = recipesDB.find(r => r.id === recId);
+            let pCount = p1.inventory.filter(i => i.id === rec.reqType).length;
+            if (pCount < rec.reqCount) return;
+
+            // Изымаем материалы из рюкзака
+            let removed = 0;
+            for (let i = p1.inventory.length - 1; i >= 0; i--) {
+                if (p1.inventory[i].id === rec.reqType && removed < rec.reqCount) {
+                    p1.inventory.splice(i, 1);
+                    removed++;
+                }
+            }
+
+            // Создаем предмет
+            let baseItem = itemsRegistry[rec.resultSlot].find(i => i.id === rec.resultId);
+            let newItem = createItemInst(baseItem);
+
+            // Крит крафта (50% шанс, если это не зелья/свитки)
+            let isCrit = Math.random() < 0.50;
+            let msg = `Вы успешно создали: ${newItem.name}!`;
+            let msgColor = '#2ecc71';
+
+            if (isCrit && rec.resultSlot !== 'consumables') {
+                let statsToRaise = ['str', 'agi', 'int', 'def', 'vit'];
+                let randomStat = statsToRaise[Math.floor(Math.random() * statsToRaise.length)];
+                if(!newItem.stats) newItem.stats = {};
+                newItem.stats[randomStat] = (newItem.stats[randomStat] || 0) + 1;
+                newItem.name = '★ ' + newItem.name;
+                msg = `КРИТ КРАФТА! Вы создали шедевр: ${newItem.name} (+1 ${statNamesRU[randomStat]})!`;
+                msgColor = '#f1c40f';
+            }
+
+            p1.inventory.push(newItem);
+            
+            showCraftMsg(msg, msgColor);
+            updateUI();
+            renderCraft();
+            saveGameProgress();
+        }
 
         // --- ЛОГИКА КВЕСТОВ ---
         function getQuestProgressCount(dbQ) {
@@ -676,7 +809,6 @@
             saveGameProgress();
         }
 
-
         // --- ИГРОВЫЕ ФУНКЦИИ ---
         function selectMonster(monsterId) {
             if (battleStarted) return;
@@ -733,13 +865,16 @@
         function switchTab(tabId) {
             document.getElementById('arena-tab').style.display = tabId === 'arena' ? 'flex' : 'none';
             document.getElementById('shop-tab').style.display = tabId === 'shop' ? 'flex' : 'none';
+            document.getElementById('craft-tab').style.display = tabId === 'craft' ? 'flex' : 'none';
             document.getElementById('quests-tab').style.display = tabId === 'quests' ? 'flex' : 'none';
             
             document.getElementById('tab-btn-arena').classList.toggle('active', tabId === 'arena');
             document.getElementById('tab-btn-shop').classList.toggle('active', tabId === 'shop');
+            document.getElementById('tab-btn-craft').classList.toggle('active', tabId === 'craft');
             document.getElementById('tab-btn-quests').classList.toggle('active', tabId === 'quests');
             
             if (tabId === 'shop') renderShop(); 
+            else if (tabId === 'craft') renderCraft();
             else if (tabId === 'quests') renderQuests();
             else updateUI(); 
         }
@@ -792,7 +927,6 @@
                 setTimeout(() => { document.getElementById('heal-modal-msg').innerText = ""; }, 2000);
                 return;
             }
-            // Удаляем травму и тратим предмет
             delete p1.injuries[part];
             let scrollName = p1.inventory[activeHealIndex].name;
             p1.inventory.splice(activeHealIndex, 1);
@@ -809,6 +943,7 @@
             document.getElementById('shop-money-display').innerHTML = formatMoney(p1.money);
             let buyHtml = '';
             for (let slotId in itemsRegistry) {
+                if (slotId === 'materials') continue; // Ресурсы не продаются в витрине
                 itemsRegistry[slotId].forEach(item => {
                     let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
                     buyHtml += `<div class="shop-item"><div class="shop-item-info"><span class="shop-item-name">${item.name}</span><span class="shop-item-stats">${statStr}</span><span class="shop-item-price">${formatMoney(item.price)}</span></div><button class="btn-stat-plus" style="width:auto; padding: 5px 10px; height:auto; background:#2980b9;" onclick="buyItem('${slotId}', '${item.id}')">Купить</button></div>`;
@@ -839,6 +974,8 @@
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #8e44ad;" onclick="openRuneModal(${index})" ${battleStarted ? 'disabled' : ''}>Встроить</button></div>`;
                     } else if (item.slot === 'consumables') {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #e67e22;" onclick="useConsumable(${index})" ${battleStarted ? 'disabled' : ''}>Использ.</button></div>`;
+                    } else if (item.slot === 'materials') {
+                        html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span></div>`;
                     } else {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`;
                     }
@@ -914,7 +1051,7 @@
             let hasValidItems = false;
             
             p1.inventory.forEach((item) => {
-                if (item.slot === 'belt' || item.slot === 'runes' || item.slot === 'consumables') return;
+                if (item.slot === 'belt' || item.slot === 'runes' || item.slot === 'consumables' || item.slot === 'materials') return;
                 
                 hasValidItems = true;
                 let slotName = slotsConfig.find(s => s.id === item.slot).name;
@@ -984,7 +1121,6 @@
                 if(mod.maxDmg !== undefined) { total.bonusMaxDmg += mod.maxDmg; total.itemBonus.maxDmg += mod.maxDmg; }
             });
 
-            // Применяем штрафы от всех активных травм
             if (player.injuries) {
                 for (let part in player.injuries) {
                     if (player.injuries[part]) {
@@ -1027,6 +1163,26 @@
             effectDiv.timeoutId = setTimeout(() => { effectDiv.style.opacity = 0; }, 1000); 
         }
 
+        function showDamageInBar(playerId, dmg, isCrit) {
+            let hpContainer = document.querySelector(`#fighter${playerId}-card .hp-bar-container`);
+            if (!hpContainer) return;
+            let dmgEl = document.createElement('div');
+            dmgEl.className = 'dmg-fly' + (isCrit ? ' crit' : '');
+            dmgEl.innerText = `-${dmg}`;
+            hpContainer.appendChild(dmgEl);
+            setTimeout(() => { if(dmgEl.parentElement) dmgEl.remove(); }, 800);
+        }
+
+        function showHealInBar(playerId, amount) {
+            let hpContainer = document.querySelector(`#fighter${playerId}-card .hp-bar-container`);
+            if (!hpContainer) return;
+            let healEl = document.createElement('div');
+            healEl.className = 'heal-fly';
+            healEl.innerText = `+${amount}`;
+            hpContainer.appendChild(healEl);
+            setTimeout(() => { if(healEl.parentElement) healEl.remove(); }, 800);
+        }
+
         function updateUI() {
             renderInventory(); renderPaperDoll(p1); renderPaperDoll(p2);
             document.getElementById('lvl-p1').innerText = p1.level;
@@ -1037,7 +1193,6 @@
             document.getElementById('exp-bar-p1').style.width = expPercent + '%';
             document.getElementById('lvl-p2').innerText = p2.level;
 
-            // Очистка просроченных травм и их отображение
             let hasInjuries = false;
             let injHtml = '';
             if (p1.injuries) {
@@ -1045,7 +1200,7 @@
                 for (let part in p1.injuries) {
                     if (p1.injuries[part]) {
                         if (now >= p1.injuries[part].expiresAt) {
-                            delete p1.injuries[part]; // Удаляем, если время вышло
+                            delete p1.injuries[part]; 
                         } else {
                             hasInjuries = true;
                             let injDef = injuriesDB.find(i => i.id === p1.injuries[part].id);
@@ -1155,10 +1310,16 @@
 
             let dodge = Math.floor(5 + (dStats.agi * 3) - (aStats.str * 0.5)) + dStats.bonusDodge + dStats.dodge;
             if (dodge < 0) dodge = 0;
-            if (getRandomInt(1, 100) <= dodge) return `${comboLog}<span class="log-dodge">💨 ${defender.name} увернулся от удара ${zoneText} ${attacker.name}!</span>`;
+            if (getRandomInt(1, 100) <= dodge) {
+                showComboEffectText(defender.id, 'Уворот!', '#3498db');
+                return `${comboLog}<span class="log-dodge">💨 ${defender.name} увернулся от удара ${zoneText} ${attacker.name}!</span>`;
+            }
 
             let block = 5 + Math.floor(dStats.def * 1.5) + dStats.bonusBlock + dStats.block;
-            if (getRandomInt(1, 100) <= block) return `${comboLog}<span class="log-block">🛡️ ${defender.name} заблокировал удар ${zoneText} ${attacker.name}!</span>`;
+            if (getRandomInt(1, 100) <= block) {
+                showComboEffectText(defender.id, 'Блок!', '#e67e22');
+                return `${comboLog}<span class="log-block">🛡️ ${defender.name} заблокировал удар ${zoneText} ${attacker.name}!</span>`;
+            }
 
             let dmgD = getCalculatedDamage(aStats);
             let minD = dmgD.min; let maxD = dmgD.max;
@@ -1185,10 +1346,20 @@
             defender.hp -= (actualBaseDmg + actualComboDmg);
             if (defender.hp < 0) defender.hp = 0;
 
+            showDamageInBar(defender.id, actualBaseDmg + actualComboDmg, isCrit);
+
+            if (isCrit && actualComboDmg === 0) {
+                showComboEffectText(defender.id, 'КРИТ!', '#c0392b');
+            }
+
             let pureDmgLog = '';
             if (actualComboDmg > 0) {
                 pureDmgLog = ` <span style="color:#8e44ad; font-weight:bold;">[+${actualComboDmg} урона от комбо]</span>`;
-                showComboEffectText(defender.id, `💔 -${actualComboDmg} HP (Комбо)`, '#e74c3c');
+                if (isCrit) {
+                    showComboEffectText(defender.id, `КРИТ! 💔 -${actualComboDmg} HP (Комбо)`, '#e74c3c');
+                } else {
+                    showComboEffectText(defender.id, `💔 -${actualComboDmg} HP (Комбо)`, '#e74c3c');
+                }
             }
 
             if (isCrit) logMsg = `<span class="log-crit">🔥 КРИТ! ${attacker.name} пробивает ударом ${zoneText} на ${actualBaseDmg} урона!</span>${pureDmgLog}`;
@@ -1202,6 +1373,7 @@
                 let actualHeal = Math.min(heal, aStats.maxHp - attacker.hp);
                 if (actualHeal > 0) {
                     attacker.hp += actualHeal;
+                    showHealInBar(attacker.id, actualHeal);
                     logMsg += ` <span class="log-heal">[+${actualHeal} HP вампиризм]</span>`;
                     showComboEffectText(attacker.id, `💚 +${actualHeal} HP (Вампиризм)`, '#2ecc71');
                 } else logMsg += ` <span class="log-heal">[+0 HP вампиризм (Макс. здоровье)]</span>`;
@@ -1236,7 +1408,9 @@
                 if (gameOver || !battleStarted) { clearInterval(potionHealTimer); return; }
                 if (healTicks > 0) {
                     let actualHeal = Math.min(healPerSec, stats.maxHp - p1.hp);
-                    p1.hp += actualHeal; healTicks--; updateUI();
+                    p1.hp += actualHeal; healTicks--; 
+                    if (actualHeal > 0) showHealInBar(1, actualHeal);
+                    updateUI();
                 } else clearInterval(potionHealTimer);
             }, 1000);
 
@@ -1285,7 +1459,6 @@
             log.insertAdjacentHTML('afterbegin', `<p>${attackLog}</p>`);
             updateUI();
             
-            // Проверяем, был ли смертельный удар критом, и передаем это знание дальше
             if (p1.hp <= 0) { loseBattle(attackLog.includes('КРИТ!')); return; }
 
             checkRoundEnd(); activePlayer = p1; setButtonsEnabled(true);
@@ -1303,16 +1476,26 @@
             p1.money += copperDrop;
             logMsg += `<p style="color:#f1c40f; font-weight:bold;">💰 Враг выронил ${formatMoney(copperDrop)}!</p>`;
 
-            if (Math.random() < m.dropChance) {
-                let slotKeys = Object.keys(itemsRegistry);
-                let randomSlot = slotKeys[Math.floor(Math.random() * slotKeys.length)];
-                let randomItem = itemsRegistry[randomSlot][Math.floor(Math.random() * itemsRegistry[randomSlot].length)];
-                let droppedItem = createItemInst(randomItem);
-                p1.inventory.push(droppedItem);
-                logMsg += `<p style="color:#9b59b6; font-weight:bold;">🎁 Враг выронил предмет: ${droppedItem.name}! Добавлено в рюкзак.</p>`;
+            // Механика выпадения ресурсов
+            if (Math.random() < m.dropChance && m.dropItem) {
+                let baseMat = itemsRegistry.materials.find(i => i.id === m.dropItem);
+                if (baseMat) {
+                    let droppedItem = createItemInst(baseMat);
+                    p1.inventory.push(droppedItem);
+                    logMsg += `<p style="color:#e67e22; font-weight:bold;">⛏️ Вы добыли ресурс: ${droppedItem.name}! (Загляните в Мастерскую)</p>`;
+                }
             }
 
-            // ПРОВЕРКА КВЕСТОВ (Kill)
+            // Механика выпадения вещей и рун (дополнительный шанс 15%)
+            if (Math.random() < 0.15) {
+                let dropCategories = ['head', 'armor', 'weapon', 'shield', 'foot', 'runes'];
+                let randomCat = dropCategories[Math.floor(Math.random() * dropCategories.length)];
+                let randomItem = itemsRegistry[randomCat][Math.floor(Math.random() * itemsRegistry[randomCat].length)];
+                let droppedGear = createItemInst(randomItem);
+                p1.inventory.push(droppedGear);
+                logMsg += `<p style="color:#9b59b6; font-weight:bold;">🎁 Враг выронил предмет: ${droppedGear.name}! Добавлено в рюкзак.</p>`;
+            }
+
             let questLogs = [];
             p1.quests.forEach(q => {
                 if (q.status === 'active') {
@@ -1339,7 +1522,6 @@
             gameOver = true; battleStarted = false;
             let msg = `<p class="log-kill" style="color:#e74c3c;">☠️ ПОРАЖЕНИЕ! Вы пали в бою.</p>`;
             
-            // Механика получения травмы (30% шанс, ТОЛЬКО если убит критом)
             if (diedFromCrit && Math.random() < 0.3) {
                 let randomInj = injuriesDB[Math.floor(Math.random() * injuriesDB.length)];
                 if (!p1.injuries) p1.injuries = {};
@@ -1349,7 +1531,6 @@
                                  ? p1.injuries[randomInj.part].expiresAt 
                                  : now;
                                  
-                // Ставим или продлеваем травму на 30 минут
                 p1.injuries[randomInj.part] = {
                     id: randomInj.id,
                     expiresAt: currentExp + 30 * 60 * 1000 
@@ -1396,7 +1577,6 @@
             if (p1.equipment.belt) p1.potionCount = p1.equipment.belt.potion.count; else p1.potionCount = 0;
             p1.potionCooldown = 0; clearBattleTimers(); updatePotionUI();
 
-            // Запускаем кровотечение от травм
             let activeInjuriesCount = p1.injuries ? Object.values(p1.injuries).filter(i => i).length : 0;
             let log = document.getElementById("battleLog");
             if (activeInjuriesCount > 0) {
@@ -1407,14 +1587,14 @@
                     let currentInjuriesCount = p1.injuries ? Object.values(p1.injuries).filter(i => i).length : 0;
                     if (currentInjuriesCount > 0) {
                         let dmg = currentInjuriesCount * 2;
-                        let actualDmg = Math.min(dmg, p1.hp); // Ограничиваем урон остатком HP
+                        let actualDmg = Math.min(dmg, p1.hp); 
                         p1.hp -= actualDmg;
                         if (p1.hp < 0) p1.hp = 0;
                         updateUI();
+                        showDamageInBar(1, actualDmg, false);
                         let bLog = document.getElementById("battleLog");
                         bLog.insertAdjacentHTML('afterbegin', `<p><span style="color:#e74c3c;">🩸 Кровотечение: Вы теряете ${actualDmg} HP из-за травм!</span></p>`);
                         showComboEffectText(1, `💔 -${actualDmg} HP (Кровотечение)`, '#e74c3c');
-                        // Смерть от кровотечения никогда не дает новую травму (передаем false)
                         if (p1.hp <= 0) loseBattle(false);
                     } else {
                         clearInterval(injuryDotTimer);
