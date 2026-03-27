@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Арена: Онлайн Сохранения и Крафт</title>
+    <title>Арена: Онлайн Сохранения и Профессии</title>
     <!-- Подключаем библиотеку Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -87,7 +87,7 @@
             padding: 5px 10px; border-radius: 5px; font-size: 0.9em; border-left: 3px solid #f39c12; min-height: 26px;
         }
         .doll-slot select {
-            width: 75%; background: #34495e; color: #ecf0f1; border: 1px solid #7f8c8d;
+            width: 70%; background: #34495e; color: #ecf0f1; border: 1px solid #7f8c8d;
             padding: 4px; border-radius: 3px; outline: none; font-size: 0.9em;
         }
 
@@ -136,7 +136,7 @@
         .inv-list::-webkit-scrollbar-track, .log-box::-webkit-scrollbar-track, .shop-list::-webkit-scrollbar-track { background: #ecf0f1; border-radius: 4px; }
         .inv-list::-webkit-scrollbar-thumb, .log-box::-webkit-scrollbar-thumb, .shop-list::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 4px; }
 
-        /* МАГАЗИН И КВЕСТЫ */
+        /* МАГАЗИН И ПРОЧИЕ ВКЛАДКИ */
         .full-container { width: 100%; max-width: 1100px; display: none; flex-direction: column; gap: 20px; }
         .shop-header { text-align: center; color: #f1c40f; font-size: 1.5em; font-weight: bold; margin-bottom: 10px; }
         .shop-flex { display: flex; gap: 30px; width: 100%; }
@@ -162,6 +162,22 @@
         .quest-progress-fill { background: #3498db; height: 100%; transition: width 0.3s; }
         .quest-progress-text { position: absolute; top: 0; left: 0; width: 100%; height: 100%; text-align: center; font-size: 0.8em; line-height: 15px; color: white; font-weight: bold;}
 
+        /* ДОБЫЧА И ПРОФЕССИИ */
+        .gather-panel { background-color: #34495e; border-radius: 10px; padding: 15px; border: 2px solid #2ecc71; margin-bottom: 15px; }
+        .prof-info { display: flex; justify-content: space-around; background: #2c3e50; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px dashed #bdc3c7; font-weight: bold;}
+        .gather-node { display: flex; justify-content: space-between; align-items: center; background: #2b3e50; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid; }
+        .node-orange { border-color: #e67e22; }
+        .node-blue { border-color: #3498db; }
+        .node-green { border-color: #2ecc71; }
+        .node-gray { border-color: #95a5a6; }
+        .gather-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: background 0.2s;}
+        .gather-btn:hover { background: #2ecc71; }
+        .gather-btn:disabled { background: #7f8c8d; cursor: not-allowed; }
+        
+        .gather-progress-container { width: 100%; background: #1a252f; height: 20px; border-radius: 10px; margin-top: 15px; overflow: hidden; display: none; border: 1px solid #7f8c8d; position: relative;}
+        .gather-progress-bar { width: 0%; height: 100%; background: #e67e22; transition: width linear; }
+        .gather-progress-text { position: absolute; width: 100%; text-align: center; line-height: 20px; font-size: 0.85em; font-weight: bold; }
+
         .coin-gold { color: #f1c40f; font-weight: bold; }
         .coin-silver { color: #bdc3c7; font-weight: bold; }
         .coin-copper { color: #d35400; font-weight: bold; }
@@ -183,10 +199,7 @@
             animation: floatDamage 0.8s ease-out forwards;
             z-index: 10;
         }
-        .dmg-fly.crit {
-            color: #f1c40f;
-            font-size: 1.8em;
-        }
+        .dmg-fly.crit { color: #f1c40f; font-size: 1.8em; }
         .heal-fly {
             position: absolute;
             top: 50%;
@@ -224,8 +237,10 @@
         <!-- Вкладки -->
         <div class="tabs">
             <button id="tab-btn-arena" class="tab-btn active" onclick="switchTab('arena')">⚔️ Арена</button>
-            <button id="tab-btn-shop" class="tab-btn" onclick="switchTab('shop')">💰 Магазин</button>
+            <button id="tab-btn-gather" class="tab-btn" onclick="switchTab('gather')">🌲 Добыча</button>
+            <button id="tab-btn-dungeon" class="tab-btn" onclick="switchTab('dungeon')">🏰 Подземелья</button>
             <button id="tab-btn-craft" class="tab-btn" onclick="switchTab('craft')">🛠 Крафт</button>
+            <button id="tab-btn-shop" class="tab-btn" onclick="switchTab('shop')">💰 Магазин</button>
             <button id="tab-btn-quests" class="tab-btn" onclick="switchTab('quests')">📜 Квесты</button>
         </div>
 
@@ -337,6 +352,36 @@
             </div>
         </div>
 
+        <!-- ВКЛАДКА: ДОБЫЧА -->
+        <div id="gather-tab" class="full-container" style="max-width: 800px;">
+            <div class="shop-header" style="color: #2ecc71;">Леса и Шахты (Добыча)</div>
+            <div id="gather-msg" class="shop-msg"></div>
+            
+            <div class="prof-info">
+                <span>🌿 Травник: <span id="prof-herbalist-lvl" style="color:#2ecc71;">0</span></span>
+                <span>⛏️ Геолог: <span id="prof-geologist-lvl" style="color:#f1c40f;">0</span></span>
+            </div>
+
+            <div class="gather-panel">
+                <h3 style="color: #2ecc71; text-align: center; margin-top:0;">Доступные ресурсы</h3>
+                <p style="text-align:center; font-size:0.85em; color:#bdc3c7; margin-top:-10px;">Для добычи необходим надетый инструмент. Оранжевые ресурсы качают навык (75% шанс), серые — не качают.</p>
+                <div id="gather-list" style="margin-top: 15px;"></div>
+                
+                <div class="gather-progress-container" id="gather-progress">
+                    <div class="gather-progress-bar" id="gather-bar"></div>
+                    <div class="gather-progress-text" id="gather-text">Добыча...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА: ПОДЗЕМЕЛЬЯ -->
+        <div id="dungeon-tab" class="full-container" style="max-width: 800px;">
+            <div class="shop-header" style="color: #9b59b6;">Подземелья и Боссы</div>
+            <div id="dungeon-list" style="width: 100%;">
+                <!-- Подземелья генерируются через JS -->
+            </div>
+        </div>
+
         <!-- ВКЛАДКА: МАГАЗИН -->
         <div id="shop-tab" class="full-container">
             <div class="shop-header">Баланс: <span id="shop-money-display">0</span></div>
@@ -444,7 +489,7 @@
 
         const slotsConfig = [
             { id: 'head', name: 'Голова' }, { id: 'armor', name: 'Корпус' }, { id: 'weapon', name: 'Пр. рука' },
-            { id: 'shield', name: 'Лев. рука' }, { id: 'foot', name: 'Обувь' }, { id: 'belt', name: 'Пояс (Зелья)' }
+            { id: 'shield', name: 'Лев. рука' }, { id: 'foot', name: 'Обувь' }, { id: 'belt', name: 'Пояс (Зелья)' }, { id: 'tool', name: 'Инструмент' }
         ];
 
         // БАЗА ТРАВМ
@@ -472,10 +517,19 @@
             consumables: [
                 { id: 'c1', name: 'Свиток Исцеления', price: 5000, stats: {}, type: 'heal_injury' }
             ],
+            tool: [
+                { id: 't1', name: 'Серп Травника', price: 2000, stats: {}, type: 'tool', prof: 'herbalist' },
+                { id: 't2', name: 'Кирка Геолога', price: 2000, stats: {}, type: 'tool', prof: 'geologist' }
+            ],
             materials: [
                 { id: 'm1', name: 'Обрывок кожи', price: 200, stats: {}, type: 'material' },
                 { id: 'm2', name: 'Ядовитая железа', price: 400, stats: {}, type: 'material' },
-                { id: 'm3', name: 'Обломок стали', price: 800, stats: {}, type: 'material' }
+                { id: 'm3', name: 'Обломок стали', price: 800, stats: {}, type: 'material' },
+                { id: 'm4', name: 'Чертополох', price: 100, stats: {}, type: 'material' },
+                { id: 'm5', name: 'Медная руда', price: 150, stats: {}, type: 'material' }
+            ],
+            keys: [
+                { id: 'key1', name: 'Ржавый ключ', price: 500, stats: {}, type: 'key' }
             ]
         };
 
@@ -483,7 +537,15 @@
         const recipesDB = [
             { id: 'rec1', name: 'Сшить Сапоги Убийцы', reqType: 'm1', reqCount: 3, resultSlot: 'foot', resultId: 'f1' },
             { id: 'rec2', name: 'Сварить Свиток Исцеления', reqType: 'm2', reqCount: 2, resultSlot: 'consumables', resultId: 'c1' },
-            { id: 'rec3', name: 'Выковать Шлем Скалы', reqType: 'm3', reqCount: 2, resultSlot: 'head', resultId: 'h3' }
+            { id: 'rec3', name: 'Выковать Шлем Скалы', reqType: 'm3', reqCount: 2, resultSlot: 'head', resultId: 'h3' },
+            { id: 'rec4', name: 'Сварить Эликсир Жизни', reqType: 'm4', reqCount: 3, resultSlot: 'belt', resultId: 'pot1' },
+            { id: 'rec5', name: 'Выточить Руну Силы', reqType: 'm5', reqCount: 5, resultSlot: 'runes', resultId: 'r1' }
+        ];
+
+        // БАЗА ТОЧЕК ДОБЫЧИ
+        const gatherNodesDB = [
+            { id: 'gn1', name: 'Куст Чертополоха', prof: 'herbalist', reqSkill: 0, resId: 'm4', time: 3000 },
+            { id: 'gn2', name: 'Медная жила', prof: 'geologist', reqSkill: 0, resId: 'm5', time: 3000 }
         ];
 
         // --- БЕСТИАРИЙ ---
@@ -503,29 +565,19 @@
             {
                 id: 'thug', name: 'Головорез', level: 3, dropChance: 0.6, dropItem: 'm3', expReward: 800, moneyReward: { min: 3500, max: 6000 },
                 baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5 }
+            },
+            {
+                id: 'smuggler_boss', name: 'Главарь Контрабандистов (БОСС)', level: 5, dropChance: 1.0, dropItem: 'm3', expReward: 2500, moneyReward: { min: 15000, max: 25000 },
+                baseStats: { str: 14, agi: 8, int: 8, def: 12, vit: 30, ini: 10, crit: 10, dodge: 5, block: 10 },
+                isBoss: true
             }
         ];
 
         // --- КВЕСТЫ (БД) ---
         const questsDB = [
-            { 
-                id: 'q1', title: 'Очистка подвала', 
-                desc: 'Трактирщик жалуется на вредителей. Убейте 3 Кретсов-малышей.', 
-                targetType: 'kill', targetId: 'kret', targetCount: 3, 
-                rewardExp: 500, rewardMoney: 2000 // 20 серебра
-            },
-            { 
-                id: 'q2', title: 'Угроза с воздуха', 
-                desc: 'Зигреды нападают на караваны. Уничтожьте 2 Зигредов.', 
-                targetType: 'kill', targetId: 'zigred', targetCount: 2, 
-                rewardExp: 800, rewardMoney: 3000, rewardItem: 'pot1' // + Эликсир
-            },
-            { 
-                id: 'q3', title: 'Экипировка стражи', 
-                desc: 'Для городской стражи требуется снаряжение. Добудьте 2 Шлема Призрака (купите в магазине).', 
-                targetType: 'collect', targetId: 'h2', targetCount: 2, 
-                rewardExp: 200, rewardMoney: 10000 // 1 золотой
-            }
+            { id: 'q1', title: 'Очистка подвала', desc: 'Убейте 3 Кретсов-малышей.', targetType: 'kill', targetId: 'kret', targetCount: 3, rewardExp: 500, rewardMoney: 2000 },
+            { id: 'q2', title: 'Угроза с воздуха', desc: 'Уничтожьте 2 Зигредов.', targetType: 'kill', targetId: 'zigred', targetCount: 2, rewardExp: 800, rewardMoney: 3000, rewardItem: 'pot1' },
+            { id: 'q3', title: 'Экипировка стражи', desc: 'Для городской стражи требуется снаряжение. Добудьте 2 Шлема Призрака (купите в магазине).', targetType: 'collect', targetId: 'h2', targetCount: 2, rewardExp: 200, rewardMoney: 10000 }
         ];
 
         function createItemInst(baseItem) {
@@ -535,8 +587,10 @@
             return item;
         }
 
-        function formatStatsForSelect(stats, potion, type) {
+        function formatStatsForSelect(stats, potion, type, prof) {
+            if (type === 'key') return `Открывает подземелье`;
             if (type === 'material') return `Сырье для крафта`;
+            if (type === 'tool') return `Инструмент: ${prof === 'herbalist' ? 'Травник' : 'Геолог'}`;
             if (type === 'heal_injury') return `Лечит травму на 1 части тела`;
             if (potion) return `Восст. ${Math.round(potion.healPercent * 100)}% HP (${potion.count} шт)`;
             if (!stats || Object.keys(stats).length === 0) return 'Без статов';
@@ -555,23 +609,26 @@
             id: 1, name: "Игрок 1", level: 1, exp: 0, money: 10000, 
             baseStats: { ...baseStatsTemplate }, 
             inventory: [ createItemInst(itemsRegistry['weapon'][0]), createItemInst(itemsRegistry['belt'][0]) ], 
-            equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null }, 
+            equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }, 
             quests: [], 
             hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0,
-            injuries: {} // Формат: { head: { id: 'inj1', expiresAt: 12345 }, chest: ... }
+            injuries: {},
+            professions: { herbalist: 0, geologist: 0 }, // Навыки профессий
+            instanceCooldowns: {} // Таймеры подземелий
         };
 
         let p2 = {
             id: 2, name: "Бот (Морок)", level: 1, exp: 0, money: 0,
             monsterId: 'morok',
             baseStats: { ...baseStatsTemplate }, inventory: [],
-            equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null }, 
+            equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }, 
             hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0,
             injuries: {}
         };
 
         let roundCount = 1; let attacksThisRound = 0; let gameOver = false; let activePlayer = null; let battleStarted = false;
         let potionCooldownTimer = null; let potionHealTimer = null; let injuryDotTimer = null;
+        let isGathering = false; let gatherTimerInterval = null;
 
         // --- СИСТЕМА СОХРАНЕНИЙ (SUPABASE) ---
         async function saveGameProgress() {
@@ -580,7 +637,8 @@
                 level: p1.level, exp: p1.exp, money: p1.money,
                 baseStats: p1.baseStats, inventory: p1.inventory,
                 equipment: p1.equipment, quests: p1.quests,
-                injuries: p1.injuries
+                injuries: p1.injuries, professions: p1.professions,
+                instanceCooldowns: p1.instanceCooldowns
             };
             const { error } = await supabaseClient.from('saves').upsert({ id: currentUser.id, game_data: saveData });
             if (error) console.error("Ошибка сохранения:", error.message);
@@ -595,9 +653,14 @@
                 p1.money = s.money !== undefined ? s.money : 10000;
                 if (s.baseStats) p1.baseStats = s.baseStats;
                 if (s.inventory) p1.inventory = s.inventory;
-                if (s.equipment) p1.equipment = s.equipment;
+                if (s.equipment) {
+                    p1.equipment = s.equipment;
+                    if (!p1.equipment.tool) p1.equipment.tool = null; 
+                }
                 if (s.quests) p1.quests = s.quests; else p1.quests = [];
                 if (s.injuries !== undefined) p1.injuries = s.injuries; else p1.injuries = {};
+                if (s.professions) p1.professions = s.professions; else p1.professions = { herbalist: 0, geologist: 0 };
+                if (s.instanceCooldowns) p1.instanceCooldowns = s.instanceCooldowns; else p1.instanceCooldowns = {};
             } else if (error && error.code !== 'PGRST116') {
                 console.error("Ошибка загрузки:", error.message);
             }
@@ -632,6 +695,171 @@
                 document.getElementById('game-screen').style.display = 'none';
             }
         });
+
+        // --- ЛОГИКА СБОРА РЕСУРСОВ ---
+        function getGatherColorInfo(diff) {
+            if (diff < 0) return { color: 'gray', class: 'node-gray', chance: 0, text: 'Слишком сложно' };
+            if (diff <= 10) return { color: '#e67e22', class: 'node-orange', chance: 0.75, text: 'Оранжевый (75%)' };
+            if (diff <= 20) return { color: '#3498db', class: 'node-blue', chance: 0.30, text: 'Синий (30%)' };
+            if (diff <= 30) return { color: '#2ecc71', class: 'node-green', chance: 0.10, text: 'Зеленый (10%)' };
+            return { color: '#95a5a6', class: 'node-gray', chance: 0, text: 'Серый (0%)' };
+        }
+
+        function renderGather() {
+            document.getElementById('prof-herbalist-lvl').innerText = p1.professions.herbalist;
+            document.getElementById('prof-geologist-lvl').innerText = p1.professions.geologist;
+
+            let html = '';
+            let tool = p1.equipment.tool;
+            
+            gatherNodesDB.forEach(node => {
+                let curSkill = p1.professions[node.prof];
+                let diff = curSkill - node.reqSkill;
+                let info = getGatherColorInfo(diff);
+                let hasCorrectTool = tool && tool.prof === node.prof;
+                let canGather = hasCorrectTool && diff >= 0 && !isGathering && !battleStarted;
+                let resBase = itemsRegistry.materials.find(m => m.id === node.resId);
+
+                let btnText = 'Добывать';
+                if (!tool) btnText = 'Нужен инструмент';
+                else if (tool.prof !== node.prof) btnText = 'Не тот инструмент';
+
+                html += `
+                    <div class="gather-node ${info.class}">
+                        <div>
+                            <span style="font-weight:bold; font-size:1.1em; color:${info.color}">${node.name}</span>
+                            <div style="font-size:0.85em; color:#bdc3c7; margin-top:3px;">Мин. навык: ${node.reqSkill} | Добывается: ${resBase.name}</div>
+                        </div>
+                        <button class="gather-btn" onclick="startGather('${node.id}')" ${!canGather ? 'disabled' : ''}>${btnText}</button>
+                    </div>
+                `;
+            });
+
+            if (html === '') {
+                html = '<p style="text-align:center; color:#bdc3c7;">Нет доступных ресурсов.</p>';
+            }
+            
+            document.getElementById('gather-list').innerHTML = html;
+        }
+
+        function startGather(nodeId) {
+            if (isGathering || battleStarted) return;
+            let node = gatherNodesDB.find(n => n.id === nodeId);
+            if (!node || !p1.equipment.tool || p1.equipment.tool.prof !== node.prof) return;
+
+            isGathering = true;
+            renderGather(); 
+            
+            let progContainer = document.getElementById('gather-progress');
+            let progBar = document.getElementById('gather-bar');
+            let progText = document.getElementById('gather-text');
+            
+            progContainer.style.display = 'block';
+            progBar.style.width = '0%';
+            progBar.style.transition = 'none';
+            progText.innerText = 'Процесс добычи...';
+            
+            setTimeout(() => {
+                progBar.style.transition = `width ${node.time}ms linear`;
+                progBar.style.width = '100%';
+            }, 50);
+
+            gatherTimerInterval = setTimeout(() => {
+                finishGather(node);
+            }, node.time);
+        }
+
+        function finishGather(node) {
+            isGathering = false;
+            let progContainer = document.getElementById('gather-progress');
+            progContainer.style.display = 'none';
+
+            let curSkill = p1.professions[node.prof];
+            let diff = curSkill - node.reqSkill;
+            let info = getGatherColorInfo(diff);
+            
+            let successChance = 0.70 + (diff * 0.02); 
+            if (successChance > 0.95) successChance = 0.95; 
+            
+            let isSuccess = Math.random() <= successChance;
+            let msg = '';
+            let msgColor = '';
+
+            if (isSuccess) {
+                let doubleProc = Math.random() < 0.06; 
+                let count = doubleProc ? 2 : 1;
+                let resBase = itemsRegistry.materials.find(m => m.id === node.resId);
+                
+                for(let i=0; i<count; i++) p1.inventory.push(createItemInst(resBase));
+                
+                msg = doubleProc ? `🔥 ДУБЛЬ! Вы добыли ${resBase.name} (2 шт)!` : `Успех! Вы добыли ${resBase.name}.`;
+                msgColor = doubleProc ? '#f1c40f' : '#2ecc71';
+
+                if (Math.random() <= info.chance) {
+                    p1.professions[node.prof]++;
+                    msg += ` Ваш навык вырос!`;
+                }
+            } else {
+                msg = 'Неудача... Вы ничего не добыли.';
+                msgColor = '#e74c3c';
+            }
+
+            let msgDiv = document.getElementById('gather-msg');
+            msgDiv.style.color = msgColor;
+            msgDiv.innerText = msg;
+            setTimeout(() => { msgDiv.innerText = ""; }, 3000);
+
+            renderGather();
+            updateUI();
+            saveGameProgress();
+        }
+
+        // --- ЛОГИКА ПОДЗЕМЕЛИЙ (ИНСТАНСОВ) ---
+        function renderDungeon() {
+            let html = '';
+            let now = Date.now();
+            let cd = p1.instanceCooldowns['boss1'] || 0;
+            let isCooldown = now < cd;
+            let timeLeft = isCooldown ? Math.ceil((cd - now) / 60000) : 0;
+            
+            let keysCount = p1.inventory.filter(i => i.id === 'key1').length;
+            
+            html += `
+            <div class="shop-panel" style="border-color: #8e44ad; max-width: 600px; margin: 0 auto;">
+                <h3 style="color: #9b59b6; text-align: center; margin-top:0;">Логово Контрабандистов</h3>
+                <p style="text-align:center; font-size:0.95em;">Здесь скрывается Главарь (Уровень 5). Очень сильный противник. За победу вы гарантированно получите Экипировку или Руну!</p>
+                <div style="display:flex; justify-content:space-around; margin: 15px 0; font-weight:bold; background: #2c3e50; padding: 10px; border-radius: 5px;">
+                    <span style="color:${keysCount > 0 ? '#2ecc71' : '#e74c3c'}">🔑 Ржавые ключи: ${keysCount} / 1</span>
+                    <span style="color:${!isCooldown ? '#2ecc71' : '#e74c3c'}">⏳ Таймер: ${isCooldown ? timeLeft + ' мин' : 'Доступно'}</span>
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn-zone" style="background:#8e44ad; padding: 10px 20px; font-size: 1em;" onclick="startDungeon('smuggler_boss')" ${keysCount < 1 || isCooldown || battleStarted || isGathering ? 'disabled' : ''}>Войти в Логово</button>
+                </div>
+            </div>`;
+            document.getElementById('dungeon-list').innerHTML = html;
+        }
+
+        function startDungeon(bossId) {
+            let keysCount = p1.inventory.filter(i => i.id === 'key1').length;
+            let now = Date.now();
+            let cd = p1.instanceCooldowns['boss1'] || 0;
+            
+            if (keysCount < 1 || now < cd || battleStarted || isGathering) return;
+            
+            // Забираем 1 ключ
+            let keyIdx = p1.inventory.findIndex(i => i.id === 'key1');
+            p1.inventory.splice(keyIdx, 1);
+            
+            // Вешаем кулдаун (например, 60 минут)
+            p1.instanceCooldowns['boss1'] = now + (60 * 60 * 1000);
+            saveGameProgress();
+            
+            // Запускаем босса
+            selectMonster(bossId);
+            switchTab('arena');
+            document.getElementById('battleLog').innerHTML = `<p style="color:#8e44ad; font-weight:bold; text-align:center;">🚪 Вы вставили Ржавый ключ в замочную скважину и вошли в Подземелье...</p>`;
+        }
+
 
         // --- ЛОГИКА КРАФТА ---
         function renderCraft() {
@@ -669,7 +897,6 @@
             let pCount = p1.inventory.filter(i => i.id === rec.reqType).length;
             if (pCount < rec.reqCount) return;
 
-            // Изымаем материалы из рюкзака
             let removed = 0;
             for (let i = p1.inventory.length - 1; i >= 0; i--) {
                 if (p1.inventory[i].id === rec.reqType && removed < rec.reqCount) {
@@ -678,12 +905,10 @@
                 }
             }
 
-            // Создаем предмет
             let baseItem = itemsRegistry[rec.resultSlot].find(i => i.id === rec.resultId);
             let newItem = createItemInst(baseItem);
 
-            // Крит крафта (50% шанс, если это не зелья/свитки)
-            let isCrit = Math.random() < 0.50;
+            let isCrit = Math.random() < 0.50; // 50% для тестов
             let msg = `Вы успешно создали: ${newItem.name}!`;
             let msgColor = '#2ecc71';
 
@@ -863,18 +1088,26 @@
         }
 
         function switchTab(tabId) {
+            if (isGathering) return; // Блокируем смену вкладок при добыче
+
             document.getElementById('arena-tab').style.display = tabId === 'arena' ? 'flex' : 'none';
             document.getElementById('shop-tab').style.display = tabId === 'shop' ? 'flex' : 'none';
             document.getElementById('craft-tab').style.display = tabId === 'craft' ? 'flex' : 'none';
+            document.getElementById('gather-tab').style.display = tabId === 'gather' ? 'flex' : 'none';
+            document.getElementById('dungeon-tab').style.display = tabId === 'dungeon' ? 'flex' : 'none';
             document.getElementById('quests-tab').style.display = tabId === 'quests' ? 'flex' : 'none';
             
             document.getElementById('tab-btn-arena').classList.toggle('active', tabId === 'arena');
             document.getElementById('tab-btn-shop').classList.toggle('active', tabId === 'shop');
             document.getElementById('tab-btn-craft').classList.toggle('active', tabId === 'craft');
+            document.getElementById('tab-btn-gather').classList.toggle('active', tabId === 'gather');
+            document.getElementById('tab-btn-dungeon').classList.toggle('active', tabId === 'dungeon');
             document.getElementById('tab-btn-quests').classList.toggle('active', tabId === 'quests');
             
             if (tabId === 'shop') renderShop(); 
             else if (tabId === 'craft') renderCraft();
+            else if (tabId === 'gather') renderGather();
+            else if (tabId === 'dungeon') renderDungeon();
             else if (tabId === 'quests') renderQuests();
             else updateUI(); 
         }
@@ -943,9 +1176,9 @@
             document.getElementById('shop-money-display').innerHTML = formatMoney(p1.money);
             let buyHtml = '';
             for (let slotId in itemsRegistry) {
-                if (slotId === 'materials') continue; // Ресурсы не продаются в витрине
+                if (slotId === 'materials' || slotId === 'keys') continue; 
                 itemsRegistry[slotId].forEach(item => {
-                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
+                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
                     buyHtml += `<div class="shop-item"><div class="shop-item-info"><span class="shop-item-name">${item.name}</span><span class="shop-item-stats">${statStr}</span><span class="shop-item-price">${formatMoney(item.price)}</span></div><button class="btn-stat-plus" style="width:auto; padding: 5px 10px; height:auto; background:#2980b9;" onclick="buyItem('${slotId}', '${item.id}')">Купить</button></div>`;
                 });
             }
@@ -955,7 +1188,7 @@
             if (p1.inventory.length === 0) sellHtml = '<p style="text-align:center; color:#7f8c8d;">В рюкзаке нет вещей для продажи</p>';
             else {
                 p1.inventory.forEach((item, index) => {
-                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
+                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
                     let baseItem = itemsRegistry[item.slot].find(i => i.id === item.id);
                     let sellPrice = Math.floor((baseItem.price + (item.addedPrice || 0)) / 2);
                     sellHtml += `<div class="shop-item" style="border-left: 3px solid #27ae60;"><div class="shop-item-info"><span class="shop-item-name">${item.name}</span><span class="shop-item-stats">${statStr}</span><span class="shop-item-price">Скупка: ${formatMoney(sellPrice)}</span></div><button class="btn-stat-minus" style="width:auto; padding: 5px 10px; height:auto;" onclick="sellItem(${index})">Продать</button></div>`;
@@ -969,12 +1202,12 @@
             if (p1.inventory.length === 0) html += '<p style="text-align:center; color:#7f8c8d; font-size:0.9em; margin: 10px 0;">Рюкзак пуст</p>';
             else {
                 p1.inventory.forEach((item, index) => {
-                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
+                    let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
                     if (item.slot === 'runes') {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #8e44ad;" onclick="openRuneModal(${index})" ${battleStarted ? 'disabled' : ''}>Встроить</button></div>`;
                     } else if (item.slot === 'consumables') {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px; background: #e67e22;" onclick="useConsumable(${index})" ${battleStarted ? 'disabled' : ''}>Использ.</button></div>`;
-                    } else if (item.slot === 'materials') {
+                    } else if (item.slot === 'materials' || item.slot === 'keys') {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span></div>`;
                     } else {
                         html += `<div class="inv-item"><span>${item.name} <span style="color:#bdc3c7; font-size:0.85em;">(${statStr})</span></span><button class="btn-stat-plus" style="width: auto; padding: 0 5px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`;
@@ -994,7 +1227,7 @@
                 if (itemsRegistry[slot.id]) {
                     itemsRegistry[slot.id].forEach(item => {
                         let selected = (player.equipment[slot.id] && player.equipment[slot.id].id === item.id) ? 'selected' : '';
-                        let statStr = formatStatsForSelect(item.stats, item.potion, item.type);
+                        let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
                         html += `<option value="${item.id}" ${selected}>${item.name} (${statStr})</option>`;
                     });
                 }
@@ -1051,7 +1284,7 @@
             let hasValidItems = false;
             
             p1.inventory.forEach((item) => {
-                if (item.slot === 'belt' || item.slot === 'runes' || item.slot === 'consumables' || item.slot === 'materials') return;
+                if (item.slot === 'belt' || item.slot === 'runes' || item.slot === 'consumables' || item.slot === 'materials' || item.slot === 'tool' || item.slot === 'keys') return;
                 
                 hasValidItems = true;
                 let slotName = slotsConfig.find(s => s.id === item.slot).name;
@@ -1486,14 +1719,27 @@
                 }
             }
 
-            // Механика выпадения вещей и рун (дополнительный шанс 15%)
-            if (Math.random() < 0.15) {
+            // Механика выпадения вещей и рун (15% обычные, 100% для БОССОВ)
+            let gearDropChance = m.isBoss ? 1.0 : 0.15;
+            if (Math.random() < gearDropChance) {
                 let dropCategories = ['head', 'armor', 'weapon', 'shield', 'foot', 'runes'];
                 let randomCat = dropCategories[Math.floor(Math.random() * dropCategories.length)];
                 let randomItem = itemsRegistry[randomCat][Math.floor(Math.random() * itemsRegistry[randomCat].length)];
                 let droppedGear = createItemInst(randomItem);
                 p1.inventory.push(droppedGear);
-                logMsg += `<p style="color:#9b59b6; font-weight:bold;">🎁 Враг выронил предмет: ${droppedGear.name}! Добавлено в рюкзак.</p>`;
+                
+                if (m.isBoss) {
+                    logMsg += `<p style="color:#f1c40f; font-weight:bold; font-size:1.1em;">👑 ЭПИЧЕСКАЯ НАГРАДА БОССА: ${droppedGear.name}!</p>`;
+                } else {
+                    logMsg += `<p style="color:#9b59b6; font-weight:bold;">🎁 Враг выронил предмет: ${droppedGear.name}! Добавлено в рюкзак.</p>`;
+                }
+            }
+
+            // Дроп Ржавого ключа с обычных мобов (10% шанс)
+            if (!m.isBoss && Math.random() < 0.10) {
+                let keyItem = createItemInst(itemsRegistry.keys[0]);
+                p1.inventory.push(keyItem);
+                logMsg += `<p style="color:#e67e22; font-weight:bold;">🔑 Вы нашли: ${keyItem.name}! (Доступ в Подземелье)</p>`;
             }
 
             let questLogs = [];
@@ -1571,7 +1817,7 @@
         }
 
         function startBattle() {
-            if (battleStarted || p1.hp <= 0) return;
+            if (battleStarted || p1.hp <= 0 || isGathering) return;
             battleStarted = true;
 
             if (p1.equipment.belt) p1.potionCount = p1.equipment.belt.potion.count; else p1.potionCount = 0;
