@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Арена: Онлайн RPG</title>
-    <!-- Подключаем библиотеку Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        /* БАЗОВЫЙ ДИЗАЙН И ФОН */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1c2833 0%, #2c3e50 100%); color: #ecf0f1; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         h1 { color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.4); margin-bottom: 5px; text-align: center; text-transform: uppercase; letter-spacing: 2px;}
 
-        /* СТИЛЬНЫЕ КНОПКИ */
         .btn-system { background: linear-gradient(to bottom, #3498db, #2980b9); color: white; border: 1px solid #1f618d; padding: 10px 20px; font-size: 1em; font-weight: bold; border-radius: 5px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         .btn-system:hover { background: linear-gradient(to bottom, #2980b9, #1f618d); transform: translateY(-1px); box-shadow: 0 5px 8px rgba(0,0,0,0.4); }
         .btn-system:active { transform: translateY(2px); box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
@@ -20,19 +17,16 @@
         .top-bar { display: flex; justify-content: space-between; width: 100%; max-width: 1100px; align-items: center; margin-bottom: 15px;}
         .user-info { color: #f1c40f; font-size: 1em; background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 20px; border: 1px solid #f39c12;}
 
-        /* НАВИГАЦИЯ */
         .tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center; }
         .tab-btn { background: linear-gradient(to bottom, #8e44ad, #732d91); color: white; border: 1px solid #5b2c6f; padding: 12px 25px; font-size: 1.05em; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         .tab-btn.active { background: linear-gradient(to bottom, #9b59b6, #8e44ad); border: 2px solid #f1c40f; box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); transform: scale(1.05); }
         .tab-btn:hover:not(.active) { background: linear-gradient(to bottom, #9b59b6, #8e44ad); transform: translateY(-2px); }
 
-        /* АНИМАЦИИ */
         @keyframes lungeRight { 0% { transform: translateX(0); } 50% { transform: translateX(40px) scale(1.02); box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); } 100% { transform: translateX(0); } }
         @keyframes lungeLeft { 0% { transform: translateX(0); } 50% { transform: translateX(-40px) scale(1.02); box-shadow: 0 0 20px rgba(231, 76, 60, 0.5); } 100% { transform: translateX(0); } }
         .anim-attack-right { animation: lungeRight 0.3s ease-in-out; z-index: 10; border-color: #e74c3c !important; }
         .anim-attack-left { animation: lungeLeft 0.3s ease-in-out; z-index: 10; border-color: #e74c3c !important; }
 
-        /* АРЕНА */
         .arena { display: flex; justify-content: center; gap: 40px; width: 100%; max-width: 1100px; margin-bottom: 20px; margin-top: 10px; perspective: 1000px; }
         .fighter { background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%); border: 3px solid #7f8c8d; border-radius: 15px; padding: 20px; width: 48%; box-shadow: 0 15px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative; transition: all 0.2s; }
         .fighter h2 { margin: 0 0 10px 0; text-align: center; color: #ecf0f1; text-shadow: 1px 1px 3px #000; }
@@ -162,12 +156,15 @@
             <button id="tab-btn-quests" class="tab-btn" onclick="switchTab('quests')">📜 Квесты</button>
         </div>
 
-        <!-- УНИВЕРСАЛЬНЫЙ БОЕВОЙ БЛОК (Перемещается между вкладками) -->
+        <!-- УНИВЕРСАЛЬНЫЙ БОЕВОЙ БЛОК -->
         <div id="battle-container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
             <div class="arena">
                 <div class="fighter" id="fighter1-card">
                     <h2>Игрок 1</h2>
-                    <div class="avatar-box"><img id="avatar-p1" class="avatar-img" src="human.gif" onerror="this.src='${placeholderImg}'"></div>
+                    <div class="avatar-box">
+                        <!-- <img id="avatar-p1" class="avatar-img" src="images/bots/human.gif"> -->
+                        <div id="avatar-p1-placeholder" class="avatar-img" style="display:flex; justify-content:center; align-items:center; font-size:4em; color:#7f8c8d;">🤺</div>
+                    </div>
                     <div class="level-info">Уровень: <button class="btn-stat-minus" onclick="changeLevel(1, -1)">-</button><b id="lvl-p1" style="color: white; font-size:1.2em;">1</b><button class="btn-stat-plus" onclick="changeLevel(1, 1)">+</button><br>Опыт: <span id="exp-p1" style="color:#9b59b6; font-weight:bold;">0</span> / <span id="maxexp-p1">720</span><div class="exp-bar-container"><div class="exp-bar" id="exp-bar-p1"></div></div></div>
                     <div id="injury-p1" class="injury-text"></div>
                     <div class="inventory-panel" id="inventory-p1"></div>
@@ -186,7 +183,10 @@
                             <option value="thug">🥷 Головорез (3 ур.)</option>
                         </select>
                     </h2>
-                    <div class="avatar-box"><img id="avatar-p2" class="avatar-img" src="" onerror="this.src='${placeholderImg}'"></div>
+                    <div class="avatar-box">
+                        <!-- <img id="avatar-p2" class="avatar-img" src=""> -->
+                        <div id="avatar-p2-placeholder" class="avatar-img" style="display:flex; justify-content:center; align-items:center; font-size:4em; color:#7f8c8d;">👿</div>
+                    </div>
                     <div class="level-info">Уровень: <b id="lvl-p2" style="color: white; font-size:1.2em;">1</b><div class="exp-bar-container"><div class="exp-bar" id="exp-bar-p2" style="width:100%; background:#e74c3c;"></div></div></div>
                     <div class="paper-doll" style="display:none;" id="p2-paper-doll"><h3>Экипировка Гладиатора</h3><div class="doll-grid" id="doll-p2"></div></div>
                     <div class="stats" id="stats-p2"></div>
@@ -205,17 +205,13 @@
             </div>
             <div class="log-box" id="battleLog"></div>
         </div>
-        <!-- КОНЕЦ БОЕВОГО БЛОКА -->
 
-        <div id="arena-tab" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <!-- Сюда вставляется battle-container для PvE -->
-        </div>
+        <div id="arena-tab" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
 
         <div id="pvp-tab" class="full-container" style="max-width: 800px;">
             <div class="shop-header" style="color: #e74c3c;">Арена Гладиаторов (PvP)</div>
             <div id="pvp-msg" class="shop-msg" style="color: #e74c3c;"></div>
             <div id="pvp-list" style="width: 100%;"></div>
-            <!-- Сюда перемещается battle-container для PvP -->
         </div>
         
         <div id="gather-tab" class="full-container" style="max-width: 800px;">
@@ -268,19 +264,14 @@
         </div>
     </div>
 
-    <!-- ИГРОВАЯ ЛОГИКА -->
     <script>
         const SUPABASE_URL = 'https://lwguqrzljvohbmpaewgj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3Z3VxcnpsanZvaGJtcGFld2dqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0ODIwOTYsImV4cCI6MjA5MDA1ODA5Nn0.0PGVrzh-BXXaNoNyZ83L3XjjWuckr7HgJ51CWJjimiU';
         
         let supabaseClient = null;
-        try {
-            if (typeof window.supabase !== 'undefined') { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
-            else { console.warn("Supabase не загружена! Оффлайн-режим."); }
-        } catch(e) { console.error("Ошибка БД:", e); }
+        try { if (typeof window.supabase !== 'undefined') { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } else { console.warn("Supabase не загружена! Оффлайн-режим."); } } catch(e) { console.error("Ошибка БД:", e); }
 
         let currentUser = null; let currentWorldBoss = null;
-        const placeholderImg = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%231a252f%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2220%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 fill=%22%237f8c8d%22%3E?%3C/text%3E%3C/svg%3E";
 
         function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
         function formatMoney(copper) { let g = Math.floor(copper / 10000); let s = Math.floor((copper % 10000) / 100); let c = copper % 100; let res = []; if (g > 0) res.push(`<span class="coin-gold">${g} Зол.</span>`); if (s > 0) res.push(`<span class="coin-silver">${s} Сер.</span>`); if (c > 0 || res.length === 0) res.push(`<span class="coin-copper">${c} Мед.</span>`); return res.join(' '); }
@@ -296,30 +287,30 @@
         const injuriesDB = [ { id: 'inj1', name: 'Сотрясение', part: 'head', stats: { int: -2, ini: -2 } }, { id: 'inj2', name: 'Перелом руки', part: 'arms', stats: { str: -2, def: -2 } }, { id: 'inj3', name: 'Вывих ноги', part: 'legs', stats: { agi: -2, dodge: -3 } }, { id: 'inj4', name: 'Тяжелая рана', part: 'chest', stats: { vit: -2, block: -3 } } ];
 
         const itemsRegistry = {
-            head: [ { id: 'h1', name: 'Шлем Убийцы', image: 'helm1.gif', price: 5000, stats: { int: 2, crit: 3, def: 1 } }, { id: 'h2', name: 'Шлем Призрака', image: 'helm2.gif', price: 5000, stats: { agi: 2, dodge: 3, def: 1 } }, { id: 'h3', name: 'Шлем Скалы', image: 'helm3.gif', price: 5000, stats: { def: 3, block: 2, vit: 1 } }, { id: 'h_hunt_1', name: '★ Корона Охотника', image: 'helm_hunt.gif', price: 100000, stats: { str: 15, int: 10, crit: 15, ini: 15 }, isFaction: true } ],
-            armor: [ { id: 'a1', name: 'Куртка Убийцы', image: 'armor1.gif', price: 10000, stats: { int: 3, minDmg: 1, maxDmg: 2, def: 2 } }, { id: 'a2', name: 'Куртка Призрака', image: 'armor2.gif', price: 10000, stats: { agi: 3, ini: 1, def: 2 } }, { id: 'a3', name: 'Кираса Скалы', image: 'armor3.gif', price: 10000, stats: { def: 5, vit: 2, agi: -1 } }, { id: 'a_hunt_1', name: '🔵 Доспех Охотника', image: 'armor_hunt.gif', price: 50000, stats: { str: 8, def: 5, vit: 5, crit: 10, ini: 10 }, isFaction: true }, { id: 'a_seek_1', name: '★ Мантия Искателя', image: 'armor_seek.gif', price: 100000, stats: { int: 15, def: 10, vit: 20, dodge: 10, block: 10 }, isFaction: true } ],
-            weapon: [ { id: 'w1', name: 'Кинжал Убийцы', image: 'wep1.gif', price: 12000, stats: { int: 4, minDmg: 3, maxDmg: 8, crit: 5 } }, { id: 'w2', name: 'Копье Призрака', image: 'wep2.gif', price: 12000, stats: { agi: 4, minDmg: 4, maxDmg: 6, dodge: 4 } }, { id: 'w3', name: 'Молот Скалы', image: 'wep3.gif', price: 12000, stats: { str: 5, minDmg: 5, maxDmg: 10, dodge: -2 } }, { id: 'w_hunt_1', name: '🟢 Меч Охотника', image: 'wep_hunt.gif', price: 25000, stats: { str: 6, minDmg: 5, maxDmg: 12, crit: 8, ini: 5 }, isFaction: true } ],
-            shield: [ { id: 's1', name: 'Офхенд Убийцы', image: 'sh1.gif', price: 8000, stats: { int: 1, crit: 2 } }, { id: 's2', name: 'Офхенд Призрака', image: 'sh2.gif', price: 8000, stats: { agi: 1, dodge: 2 } }, { id: 's3', name: 'Щит Скалы', image: 'sh3.gif', price: 8000, stats: { def: 4, block: 8, minDmg: -1, maxDmg: -1 } }, { id: 's_seek_1', name: '🔵 Офхенд Искателя', image: 'sh_seek.gif', price: 50000, stats: { int: 5, def: 6, block: 10, vit: 5 }, isFaction: true } ],
-            foot: [ { id: 'f1', name: 'Сапоги Убийцы', image: 'foot1.gif', price: 6000, stats: { int: 2, ini: 1, def: 1 } }, { id: 'f2', name: 'Сапоги Призрака', image: 'foot2.gif', price: 6000, stats: { agi: 2, dodge: 2, def: 1 } }, { id: 'f3', name: 'Сапоги Скалы', image: 'foot3.gif', price: 6000, stats: { def: 2, block: 2, vit: 1 } }, { id: 'f_seek_1', name: '🟢 Сапоги Искателя', image: 'foot_seek.gif', price: 25000, stats: { agi: 5, def: 3, dodge: 8 }, isFaction: true } ],
-            belt: [ { id: 'pot1', name: 'Эликсир Жизни', image: 'pot_life.gif', price: 3000, stats: {}, potion: { count: 3, healPercent: 0.3 } }, { id: 'pot2', name: 'Эликсир Охотника', image: 'pot_hunt.gif', price: 10000, stats: {}, potion: { count: 5, healPercent: 0.5 }, isFaction: true }, { id: 'pot3', name: 'Эликсир Искателя', image: 'pot_seek.gif', price: 10000, stats: {}, potion: { count: 5, healPercent: 0.5 }, isFaction: true } ],
-            runes: [ { id: 'r1', name: 'Руна Силы', image: 'rune1.gif', price: 15000, stats: { str: 1 } }, { id: 'r2', name: 'Руна Жизни', image: 'rune2.gif', price: 15000, stats: { vit: 1 } }, { id: 'r3', name: 'Руна Интуиции', image: 'rune3.gif', price: 15000, stats: { int: 1 } }, { id: 'r4', name: 'Руна Защиты', image: 'rune4.gif', price: 15000, stats: { def: 1 } }, { id: 'r_hunt_1', name: 'Руна Охотника', image: 'rune_hunt.gif', price: 75000, stats: { str: 3, crit: 5, ini: 5 }, isFaction: true }, { id: 'r_seek_1', name: 'Руна Искателя', image: 'rune_seek.gif', price: 75000, stats: { vit: 3, def: 3, block: 5 }, isFaction: true } ],
-            consumables: [ { id: 'c1', name: 'Свиток Исцеления', image: 'scroll_heal.gif', price: 5000, stats: {}, type: 'heal_injury' } ],
-            tool: [ { id: 't1', name: 'Серп Травника', image: 'sickle.gif', price: 2000, stats: {}, type: 'tool', prof: 'herbalist' }, { id: 't2', name: 'Кирка Геолога', image: 'pickaxe.gif', price: 2000, stats: {}, type: 'tool', prof: 'geologist' } ],
-            materials: [ { id: 'm1', name: 'Обрывок кожи', image: 'mat1.gif', price: 200, stats: {}, type: 'material' }, { id: 'm2', name: 'Ядовитая железа', image: 'mat2.gif', price: 400, stats: {}, type: 'material' }, { id: 'm3', name: 'Обломок стали', image: 'mat3.gif', price: 800, stats: {}, type: 'material' }, { id: 'm4', name: 'Чертополох', image: 'herb1.gif', price: 100, stats: {}, type: 'material' }, { id: 'm5', name: 'Медная руда', image: 'ore1.gif', price: 150, stats: {}, type: 'material' } ],
-            keys: [ { id: 'key1', name: 'Ржавый ключ', image: 'key.gif', price: 500, stats: {}, type: 'key' } ],
-            trophies: [ { id: 'tr1', name: 'Клык Кретса', image: 'trophy1.gif', price: 50, stats: {}, type: 'trophy' }, { id: 'tr2', name: 'Жало Зигреда', image: 'trophy2.gif', price: 100, stats: {}, type: 'trophy' }, { id: 'tr3', name: 'Обломок клинка', image: 'trophy3.gif', price: 200, stats: {}, type: 'trophy' }, { id: 'tr4', name: 'Печать Контрабандиста', image: 'trophy4.gif', price: 500, stats: {}, type: 'trophy' } ]
+            head: [ { id: 'h1', name: 'Шлем Убийцы', price: 5000, stats: { int: 2, crit: 3, def: 1 } }, { id: 'h2', name: 'Шлем Призрака', price: 5000, stats: { agi: 2, dodge: 3, def: 1 } }, { id: 'h3', name: 'Шлем Скалы', price: 5000, stats: { def: 3, block: 2, vit: 1 } }, { id: 'h_hunt_1', name: '★ Корона Охотника', price: 100000, stats: { str: 15, int: 10, crit: 15, ini: 15 }, isFaction: true } ],
+            armor: [ { id: 'a1', name: 'Куртка Убийцы', price: 10000, stats: { int: 3, minDmg: 1, maxDmg: 2, def: 2 } }, { id: 'a2', name: 'Куртка Призрака', price: 10000, stats: { agi: 3, ini: 1, def: 2 } }, { id: 'a3', name: 'Кираса Скалы', price: 10000, stats: { def: 5, vit: 2, agi: -1 } }, { id: 'a_hunt_1', name: '🔵 Доспех Охотника', price: 50000, stats: { str: 8, def: 5, vit: 5, crit: 10, ini: 10 }, isFaction: true }, { id: 'a_seek_1', name: '★ Мантия Искателя', price: 100000, stats: { int: 15, def: 10, vit: 20, dodge: 10, block: 10 }, isFaction: true } ],
+            weapon: [ { id: 'w1', name: 'Кинжал Убийцы', price: 12000, stats: { int: 4, minDmg: 3, maxDmg: 8, crit: 5 } }, { id: 'w2', name: 'Копье Призрака', price: 12000, stats: { agi: 4, minDmg: 4, maxDmg: 6, dodge: 4 } }, { id: 'w3', name: 'Молот Скалы', price: 12000, stats: { str: 5, minDmg: 5, maxDmg: 10, dodge: -2 } }, { id: 'w_hunt_1', name: '🟢 Меч Охотника', price: 25000, stats: { str: 6, minDmg: 5, maxDmg: 12, crit: 8, ini: 5 }, isFaction: true } ],
+            shield: [ { id: 's1', name: 'Офхенд Убийцы', price: 8000, stats: { int: 1, crit: 2 } }, { id: 's2', name: 'Офхенд Призрака', price: 8000, stats: { agi: 1, dodge: 2 } }, { id: 's3', name: 'Щит Скалы', price: 8000, stats: { def: 4, block: 8, minDmg: -1, maxDmg: -1 } }, { id: 's_seek_1', name: '🔵 Офхенд Искателя', price: 50000, stats: { int: 5, def: 6, block: 10, vit: 5 }, isFaction: true } ],
+            foot: [ { id: 'f1', name: 'Сапоги Убийцы', price: 6000, stats: { int: 2, ini: 1, def: 1 } }, { id: 'f2', name: 'Сапоги Призрака', price: 6000, stats: { agi: 2, dodge: 2, def: 1 } }, { id: 'f3', name: 'Сапоги Скалы', price: 6000, stats: { def: 2, block: 2, vit: 1 } }, { id: 'f_seek_1', name: '🟢 Сапоги Искателя', price: 25000, stats: { agi: 5, def: 3, dodge: 8 }, isFaction: true } ],
+            belt: [ { id: 'pot1', name: 'Эликсир Жизни', price: 3000, stats: {}, potion: { count: 3, healPercent: 0.3 } }, { id: 'pot2', name: 'Эликсир Охотника', price: 10000, stats: {}, potion: { count: 5, healPercent: 0.5 }, isFaction: true }, { id: 'pot3', name: 'Эликсир Искателя', price: 10000, stats: {}, potion: { count: 5, healPercent: 0.5 }, isFaction: true } ],
+            runes: [ { id: 'r1', name: 'Руна Силы', price: 15000, stats: { str: 1 } }, { id: 'r2', name: 'Руна Жизни', price: 15000, stats: { vit: 1 } }, { id: 'r3', name: 'Руна Интуиции', price: 15000, stats: { int: 1 } }, { id: 'r4', name: 'Руна Защиты', price: 15000, stats: { def: 1 } }, { id: 'r_hunt_1', name: 'Руна Охотника', price: 75000, stats: { str: 3, crit: 5, ini: 5 }, isFaction: true }, { id: 'r_seek_1', name: 'Руна Искателя', price: 75000, stats: { vit: 3, def: 3, block: 5 }, isFaction: true } ],
+            consumables: [ { id: 'c1', name: 'Свиток Исцеления', price: 5000, stats: {}, type: 'heal_injury' } ],
+            tool: [ { id: 't1', name: 'Серп Травника', price: 2000, stats: {}, type: 'tool', prof: 'herbalist' }, { id: 't2', name: 'Кирка Геолога', price: 2000, stats: {}, type: 'tool', prof: 'geologist' } ],
+            materials: [ { id: 'm1', name: 'Обрывок кожи', price: 200, stats: {}, type: 'material' }, { id: 'm2', name: 'Ядовитая железа', price: 400, stats: {}, type: 'material' }, { id: 'm3', name: 'Обломок стали', price: 800, stats: {}, type: 'material' }, { id: 'm4', name: 'Чертополох', price: 100, stats: {}, type: 'material' }, { id: 'm5', name: 'Медная руда', price: 150, stats: {}, type: 'material' } ],
+            keys: [ { id: 'key1', name: 'Ржавый ключ', price: 500, stats: {}, type: 'key' } ],
+            trophies: [ { id: 'tr1', name: 'Клык Кретса', price: 50, stats: {}, type: 'trophy' }, { id: 'tr2', name: 'Жало Зигреда', price: 100, stats: {}, type: 'trophy' }, { id: 'tr3', name: 'Обломок клинка', price: 200, stats: {}, type: 'trophy' }, { id: 'tr4', name: 'Печать Контрабандиста', price: 500, stats: {}, type: 'trophy' } ]
         };
 
         const recipesDB = [ { id: 'rec1', name: 'Сшить Сапоги Убийцы', reqType: 'm1', reqCount: 3, resultSlot: 'foot', resultId: 'f1' }, { id: 'rec2', name: 'Сварить Свиток Исцеления', reqType: 'm2', reqCount: 2, resultSlot: 'consumables', resultId: 'c1' }, { id: 'rec3', name: 'Выковать Шлем Скалы', reqType: 'm3', reqCount: 2, resultSlot: 'head', resultId: 'h3' }, { id: 'rec4', name: 'Сварить Эликсир Жизни', reqType: 'm4', reqCount: 3, resultSlot: 'belt', resultId: 'pot1' }, { id: 'rec5', name: 'Выточить Руну Силы', reqType: 'm5', reqCount: 5, resultSlot: 'runes', resultId: 'r1' } ];
         const gatherNodesDB = [ { id: 'gn1', name: 'Куст Чертополоха', prof: 'herbalist', reqSkill: 0, resId: 'm4', time: 3000 }, { id: 'gn2', name: 'Медная жила', prof: 'geologist', reqSkill: 0, resId: 'm5', time: 3000 } ];
 
         const bestiaryDB = [
-            { id: 'kret', name: 'Кретс-малыш', image: 'kret.gif', level: 1, dropChance: 0.6, dropItem: 'm1', trophyDrop: 'tr1', trophyChance: 0.5, expReward: 150, moneyReward: { min: 200, max: 500 }, baseStats: { str: 4, agi: 4, int: 2, def: 2, vit: 5, ini: 0, crit: 0, dodge: 0, block: 0 } },
-            { id: 'morok', name: 'Бот (Морок)', image: 'morok.gif', level: 1, dropChance: 0.8, dropItem: 'm1', trophyDrop: null, trophyChance: 0, expReward: 300, moneyReward: { min: 910, max: 1500 }, baseStats: { ...baseStatsTemplate } },
-            { id: 'zigred', name: 'Зигред', image: 'zigred.gif', level: 2, dropChance: 0.6, dropItem: 'm2', trophyDrop: 'tr2', trophyChance: 0.5, expReward: 450, moneyReward: { min: 1500, max: 3000 }, baseStats: { str: 7, agi: 9, int: 4, def: 4, vit: 8, ini: 5, crit: 2, dodge: 5, block: 0 } },
-            { id: 'thug', name: 'Головорез', image: 'thug.gif', level: 3, dropChance: 0.6, dropItem: 'm3', trophyDrop: 'tr3', trophyChance: 0.5, expReward: 800, moneyReward: { min: 3500, max: 6000 }, baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5 } },
-            { id: 'smuggler_boss', name: 'Главарь Контрабандистов', image: 'boss_smuggler.gif', level: 5, dropChance: 1.0, dropItem: 'm3', trophyDrop: 'tr4', trophyChance: 1.0, expReward: 2500, moneyReward: { min: 15000, max: 25000 }, baseStats: { str: 14, agi: 8, int: 8, def: 12, vit: 30, ini: 10, crit: 10, dodge: 5, block: 10 }, isLocalBoss: true },
-            { id: 'world_dragon', name: 'Древний Дракон', image: 'dragon.gif', level: 10, dropChance: 0, dropItem: null, trophyDrop: null, trophyChance: 0, expReward: 0, moneyReward: { min: 0, max: 0 }, baseStats: { str: 25, agi: 10, int: 10, def: 15, vit: 100, ini: 15, crit: 15, dodge: 5, block: 10 }, isWorldBoss: true }
+            { id: 'kret', name: 'Кретс-малыш', level: 1, dropChance: 0.6, dropItem: 'm1', trophyDrop: 'tr1', trophyChance: 0.5, expReward: 150, moneyReward: { min: 200, max: 500 }, baseStats: { str: 4, agi: 4, int: 2, def: 2, vit: 5, ini: 0, crit: 0, dodge: 0, block: 0 } },
+            { id: 'morok', name: 'Бот (Морок)', level: 1, dropChance: 0.8, dropItem: 'm1', trophyDrop: null, trophyChance: 0, expReward: 300, moneyReward: { min: 910, max: 1500 }, baseStats: { ...baseStatsTemplate } },
+            { id: 'zigred', name: 'Зигред', level: 2, dropChance: 0.6, dropItem: 'm2', trophyDrop: 'tr2', trophyChance: 0.5, expReward: 450, moneyReward: { min: 1500, max: 3000 }, baseStats: { str: 7, agi: 9, int: 4, def: 4, vit: 8, ini: 5, crit: 2, dodge: 5, block: 0 } },
+            { id: 'thug', name: 'Головорез', level: 3, dropChance: 0.6, dropItem: 'm3', trophyDrop: 'tr3', trophyChance: 0.5, expReward: 800, moneyReward: { min: 3500, max: 6000 }, baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5 } },
+            { id: 'smuggler_boss', name: 'Главарь Контрабандистов', level: 5, dropChance: 1.0, dropItem: 'm3', trophyDrop: 'tr4', trophyChance: 1.0, expReward: 2500, moneyReward: { min: 15000, max: 25000 }, baseStats: { str: 14, agi: 8, int: 8, def: 12, vit: 30, ini: 10, crit: 10, dodge: 5, block: 10 }, isLocalBoss: true },
+            { id: 'world_dragon', name: 'Древний Дракон', level: 10, dropChance: 0, dropItem: null, trophyDrop: null, trophyChance: 0, expReward: 0, moneyReward: { min: 0, max: 0 }, baseStats: { str: 25, agi: 10, int: 10, def: 15, vit: 100, ini: 15, crit: 15, dodge: 5, block: 10 }, isWorldBoss: true }
         ];
 
         const questsDB = [ { id: 'q1', title: 'Очистка подвала', desc: 'Убейте 3 Кретсов.', targetType: 'kill', targetId: 'kret', targetCount: 3, rewardExp: 500, rewardMoney: 2000 }, { id: 'q2', title: 'Угроза с воздуха', desc: 'Уничтожьте 2 Зигредов.', targetType: 'kill', targetId: 'zigred', targetCount: 2, rewardExp: 800, rewardMoney: 3000, rewardItem: 'pot1' }, { id: 'q3', title: 'Экипировка стражи', desc: 'Добудьте 2 Шлема Призрака.', targetType: 'collect', targetId: 'h2', targetCount: 2, rewardExp: 200, rewardMoney: 10000 } ];
@@ -440,7 +431,178 @@
             document.getElementById('user-email-display').innerText = "Гость (Оффлайн)"; loadGameProgress(null);
         }
 
-        // ================= РЕНДЕР И ЛОГИКА ВКЛАДОК =================
+        // ================= PVP АРЕНА =================
+        async function renderPvP() {
+            document.getElementById('pvp-list').innerHTML = '<p style="text-align:center;">Связь с сервером...</p>';
+            let data = []; if (supabaseClient && currentUser) { const res = await supabaseClient.from('saves').select('id, game_data').not('id', 'eq', 'global_world_boss'); data = res.data || []; }
+            let html = `<div class="shop-panel panel-pvp" style="max-width: 600px; margin: 0 auto;"><h3 style="color: #e74c3c; text-align: center; margin-top:0; text-shadow: 2px 2px 4px #000;">Арена Гладиаторов</h3><p style="text-align:center; font-size:0.95em;">Сразитесь с тенью реальных игроков! За победу вы получите славу (+10 Рейтинга).</p><div style="text-align:center; font-size:1.3em; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid #c0392b;">Ваш рейтинг: <b style="color:#f1c40f;">${p1.rating || 0}</b> 🏆</div><div style="text-align:center; margin-bottom: 20px;"><button class="btn-zone" style="background:linear-gradient(to bottom, #c0392b, #922b21); padding: 15px 30px; font-size: 1.1em; border-color:#7b241c;" onclick="findPvPOpponent()" ${battleStarted || isGathering ? 'disabled' : ''}>⚔️ НАЙТИ ПРОТИВНИКА</button></div><div class="leaderboard-list"><div style="text-align:center; font-weight:bold; color:#f1c40f; margin-bottom:10px; font-size:1.1em; border-bottom:1px solid #7f8c8d; padding-bottom:5px;">🏆 ТОП-10 Сервера</div>`;
+            
+            let realPlayers = []; if (data && data.length > 0) realPlayers = data.filter(d => d.id !== (currentUser ? currentUser.id : null) && d.game_data && d.game_data.email); 
+            if (realPlayers.length === 0) {
+                realPlayers = [
+                    { id: 'bot1', game_data: { email: 'Спартак (ИИ)', level: 2, rating: 50, baseStats: { str: 8, agi: 6, int: 6, def: 6, vit: 8, ini: 2, crit: 0, dodge: 0, block: 0 }, equipment: { head: null, armor: null, weapon: createItemInst(itemsRegistry.weapon[0]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } },
+                    { id: 'bot2', game_data: { email: 'Ахиллес (ИИ)', level: 3, rating: 120, baseStats: { str: 10, agi: 8, int: 5, def: 8, vit: 10, ini: 5, crit: 5, dodge: 0, block: 0 }, equipment: { head: null, armor: createItemInst(itemsRegistry.armor[0]), weapon: createItemInst(itemsRegistry.weapon[1]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } }
+                ];
+            }
+            window.cachedPvPPlayers = realPlayers;
+            let leaderboardPlayers = [...realPlayers]; let myName = document.getElementById('user-email-display').innerText;
+            leaderboardPlayers.push({ id: currentUser ? currentUser.id : 'me', game_data: { email: myName + ' (Вы)', level: p1.level, rating: p1.rating || 0 } });
+            let sorted = leaderboardPlayers.sort((a, b) => (b.game_data.rating || 0) - (a.game_data.rating || 0)).slice(0, 10);
+            
+            sorted.forEach((p, idx) => {
+                let name = p.game_data.email ? p.game_data.email.split('@')[0] : 'Гладиатор'; let isMe = p.id === (currentUser ? currentUser.id : 'me'); let nameHtml = isMe ? `<span style="color:#2ecc71; font-weight:bold;">${name}</span>` : name;
+                html += `<div class="leaderboard-item"><span><b style="color:#bdc3c7;">${idx+1}.</b> ${nameHtml} <span style="color:#7f8c8d; font-size:0.8em;">(Ур. ${p.game_data.level || 1})</span></span> <span style="color:#f1c40f; font-weight:bold; font-size:1.1em;">${p.game_data.rating || 0} 🏆</span></div>`;
+            });
+            html += `</div></div>`; document.getElementById('pvp-list').innerHTML = html;
+        }
+
+        function findPvPOpponent() {
+            if (!window.cachedPvPPlayers || window.cachedPvPPlayers.length === 0) { document.getElementById('pvp-msg').innerText = "Нет доступных противников для боя!"; setTimeout(() => { document.getElementById('pvp-msg').innerText = ""; }, 3000); return; }
+            let randomOpp = window.cachedPvPPlayers[Math.floor(Math.random() * window.cachedPvPPlayers.length)]; let oppData = randomOpp.game_data;
+            p2.monsterId = 'pvp_player'; p2.name = oppData.email ? oppData.email.split('@')[0] : "Гладиатор"; p2.image = 'human.gif'; p2.level = oppData.level || 1;
+            p2.baseStats = oppData.baseStats || JSON.parse(JSON.stringify(baseStatsTemplate)); p2.equipment = oppData.equipment || { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }; p2.injuries = oppData.injuries || {};
+            p2.isPvP = true; p2.isWorldBoss = false; p2.isLocalBoss = false;
+            
+            document.getElementById('fighter2-header').innerHTML = `<span style="color:#e74c3c;">${p2.name}</span>`;
+            document.getElementById('avatar-p2-placeholder').innerHTML = '🤺';
+            document.getElementById('p2-paper-doll').style.display = 'block';
+            p2.hp = getTotalStats(p2).maxHp; updateUI(); switchTab('pvp');
+            document.getElementById('battleLog').innerHTML = `<p style="color:#e74c3c; font-weight:bold; text-align:center;">⚔️ Вы вышли на Арену против Гладиатора: ${p2.name}!</p>`;
+        }
+
+        // ================= ДОБЫЧА И КРАФТ =================
+        function getGatherColorInfo(diff) {
+            if (diff < 0) return { color: 'gray', class: 'node-gray', chance: 0, text: 'Слишком сложно' };
+            if (diff <= 10) return { color: '#e67e22', class: 'node-orange', chance: 0.75, text: 'Оранжевый (75%)' };
+            if (diff <= 20) return { color: '#3498db', class: 'node-blue', chance: 0.30, text: 'Синий (30%)' };
+            if (diff <= 30) return { color: '#2ecc71', class: 'node-green', chance: 0.10, text: 'Зеленый (10%)' };
+            return { color: '#95a5a6', class: 'node-gray', chance: 0, text: 'Серый (0%)' };
+        }
+
+        function renderGather() {
+            document.getElementById('prof-herbalist-lvl').innerText = p1.professions.herbalist; document.getElementById('prof-geologist-lvl').innerText = p1.professions.geologist;
+            let html = ''; let tool = p1.equipment.tool;
+            gatherNodesDB.forEach(node => {
+                let curSkill = p1.professions[node.prof]; let diff = curSkill - node.reqSkill; let info = getGatherColorInfo(diff);
+                let hasCorrectTool = tool && tool.prof === node.prof; let canGather = hasCorrectTool && diff >= 0 && !isGathering && !battleStarted;
+                let resBase = itemsRegistry.materials.find(m => m.id === node.resId);
+                let btnText = !tool ? 'Нужен инструмент' : (tool.prof !== node.prof ? 'Не тот инструмент' : 'Добывать');
+
+                html += `<div class="shop-item" style="border-left: 4px solid ${info.color}; margin-bottom:10px;"><div class="item-content"><!-- <img src="${resBase.image}" class="item-icon"> --><div class="item-text-info"><span class="item-name" style="color:${info.color}">${node.name}</span><span class="item-stats">Мин. навык: ${node.reqSkill} | Добывается: ${resBase.name}</span></div></div><button class="btn-system" style="background:${canGather ? '#27ae60' : '#7f8c8d'}; padding:8px 15px;" onclick="startGather('${node.id}')" ${!canGather ? 'disabled' : ''}>${btnText}</button></div>`;
+            });
+            if (html === '') { html = '<p style="text-align:center; color:#bdc3c7;">Нет доступных ресурсов.</p>'; }
+            document.getElementById('gather-list').innerHTML = html;
+        }
+
+        function startGather(nodeId) {
+            if (isGathering || battleStarted) return; let node = gatherNodesDB.find(n => n.id === nodeId);
+            if (!node || !p1.equipment.tool || p1.equipment.tool.prof !== node.prof) return;
+
+            isGathering = true; renderGather(); 
+            let progContainer = document.getElementById('gather-progress'); let progBar = document.getElementById('gather-bar'); let progText = document.getElementById('gather-text');
+            progContainer.style.display = 'block'; progBar.style.width = '0%'; progBar.style.transition = 'none'; progText.innerText = 'Процесс добычи...';
+            setTimeout(() => { progBar.style.transition = `width ${node.time}ms linear`; progBar.style.width = '100%'; }, 50);
+            gatherTimerInterval = setTimeout(() => { finishGather(node); }, node.time);
+        }
+
+        function finishGather(node) {
+            isGathering = false; document.getElementById('gather-progress').style.display = 'none';
+            let curSkill = p1.professions[node.prof]; let diff = curSkill - node.reqSkill; let info = getGatherColorInfo(diff);
+            let successChance = 0.70 + (diff * 0.02); if (successChance > 0.95) successChance = 0.95; 
+            
+            let msg = ''; let msgColor = '';
+            if (Math.random() <= successChance) {
+                let doubleProc = Math.random() < 0.06; let count = doubleProc ? 2 : 1; let resBase = itemsRegistry.materials.find(m => m.id === node.resId);
+                for(let i=0; i<count; i++) p1.inventory.push(createItemInst(resBase));
+                msg = doubleProc ? `🔥 ДУБЛЬ! Вы добыли ${resBase.name} (2 шт)!` : `Успех! Вы добыли ${resBase.name}.`; msgColor = doubleProc ? '#f1c40f' : '#2ecc71';
+                if (Math.random() <= info.chance) { p1.professions[node.prof]++; msg += ` Ваш навык вырос!`; }
+            } else { msg = 'Неудача... Вы ничего не добыли.'; msgColor = '#e74c3c'; }
+
+            let msgDiv = document.getElementById('gather-msg'); msgDiv.style.color = msgColor; msgDiv.innerText = msg; setTimeout(() => { msgDiv.innerText = ""; }, 3000);
+            renderGather(); updateUI(); saveGameProgress();
+        }
+
+        // ================= ПОДЗЕМЕЛЬЯ И МИРОВОЙ БОСС =================
+        async function fetchWorldBoss() {
+            if (!supabaseClient) return;
+            const { data, error } = await supabaseClient.from('saves').select('game_data').eq('id', 'global_world_boss').single();
+            if (data && data.game_data) {
+                currentWorldBoss = data.game_data;
+                if (currentWorldBoss.isDead && (Date.now() - currentWorldBoss.killTime > 12 * 60 * 60 * 1000)) {
+                    currentWorldBoss = { hp: 100000, maxHp: 100000, roundId: currentWorldBoss.roundId + 1, participants: {}, isDead: false, killTime: null };
+                    await supabaseClient.from('saves').upsert({ id: 'global_world_boss', game_data: currentWorldBoss });
+                }
+            } else {
+                if (p1.localWorldBoss && p1.localWorldBoss.isDead && (Date.now() - p1.localWorldBoss.killTime > 12 * 60 * 60 * 1000)) {
+                    currentWorldBoss = { hp: 100000, maxHp: 100000, roundId: p1.localWorldBoss.roundId + 1, participants: {}, isDead: false, killTime: null };
+                    p1.localWorldBoss = currentWorldBoss; saveGameProgress();
+                } else if (p1.localWorldBoss) currentWorldBoss = p1.localWorldBoss;
+                else currentWorldBoss = { hp: 100000, maxHp: 100000, roundId: 1, participants: {}, isDead: false, killTime: null };
+                await supabaseClient.from('saves').upsert({ id: 'global_world_boss', game_data: currentWorldBoss });
+            }
+        }
+
+        async function submitWorldBossDamage(dmg) {
+            if (dmg <= 0) return; let boss = currentWorldBoss;
+            if (supabaseClient) { const { data } = await supabaseClient.from('saves').select('game_data').eq('id', 'global_world_boss').single(); if (data && data.game_data) boss = data.game_data; }
+            if (boss && boss.isDead) return;
+            boss.hp -= dmg; if (boss.hp <= 0) { boss.hp = 0; boss.isDead = true; boss.killTime = Date.now(); }
+            let uName = document.getElementById('user-email-display').innerText;
+            if (!boss.participants[currentUser ? currentUser.id : 'me']) boss.participants[currentUser ? currentUser.id : 'me'] = { name: uName, damage: 0 };
+            boss.participants[currentUser ? currentUser.id : 'me'].damage += dmg;
+            if (supabaseClient) { const upsertRes = await supabaseClient.from('saves').upsert({ id: 'global_world_boss', game_data: boss }); if (upsertRes.error) { p1.localWorldBoss = boss; saveGameProgress(); } } 
+            else { p1.localWorldBoss = boss; saveGameProgress(); }
+            currentWorldBoss = boss;
+        }
+
+        function showDungeonMsg(htmlText) { let msgDiv = document.getElementById('dungeon-msg'); msgDiv.innerHTML = htmlText; setTimeout(() => { msgDiv.innerHTML = ""; }, 5000); }
+
+        function claimWorldBossReward() {
+            if (!currentWorldBoss || !currentWorldBoss.isDead || p1.claimedBossRounds.includes(currentWorldBoss.roundId)) return;
+            let parts = Object.values(currentWorldBoss.participants).sort((a,b) => b.damage - a.damage);
+            let uName = document.getElementById('user-email-display').innerText; let myRank = parts.findIndex(p => p.name === uName) + 1;
+            if (myRank === 0) return; p1.claimedBossRounds.push(currentWorldBoss.roundId); p1.exp += 1500; p1.money += 10000;
+            let log = `<p>Награда Босса: 1500 Опыта и 1 Золотой за участие!</p>`;
+            if (myRank <= 3) {
+                let dropCategories = ['head', 'armor', 'weapon', 'shield', 'foot', 'runes']; let randomCat = dropCategories[Math.floor(Math.random() * dropCategories.length)];
+                let randomItem = itemsRegistry[randomCat][Math.floor(Math.random() * itemsRegistry[randomCat].length)]; let droppedGear = createItemInst(randomItem);
+                let statsToRaise = ['str', 'agi', 'int', 'def', 'vit']; let randomStat = statsToRaise[Math.floor(Math.random() * statsToRaise.length)];
+                if(!droppedGear.stats) droppedGear.stats = {}; droppedGear.stats[randomStat] = (droppedGear.stats[randomStat] || 0) + 2; droppedGear.name = '★ ' + droppedGear.name;
+                p1.inventory.push(droppedGear); log += `<p style="color:#f1c40f; font-weight:bold;">👑 ТОП-${myRank}! ЭПИЧЕСКАЯ НАГРАДА: ${droppedGear.name}!</p>`;
+            }
+            showDungeonMsg(log); saveGameProgress(); renderDungeon();
+        }
+
+        function renderDungeon() {
+            let now = Date.now(); let cdLoc = p1.instanceCooldowns['boss1'] || 0; let isCooldownLoc = now < cdLoc; let timeLoc = isCooldownLoc ? Math.ceil((cdLoc - now) / 60000) : 0; let keysCount = p1.inventory.filter(i => i.id === 'key1').length;
+            let html = `<div class="shop-panel panel-dung" style="max-width: 600px; margin: 0 auto;"><h3 style="color: #9b59b6; text-align: center; margin-top:0;">Логово Контрабандистов</h3><div style="display:flex; justify-content:center; margin-bottom:10px;"><div class="item-icon" style="width:60px; height:60px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:2em;">🥷</div></div><p style="text-align:center; font-size:0.95em;">Скрывается Главарь (Ур. 5). За победу вы гарантированно получите Экипировку или Руну.</p><div style="display:flex; justify-content:space-around; margin: 15px 0; font-weight:bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; border:1px solid #7f8c8d;"><span style="color:${keysCount > 0 ? '#2ecc71' : '#e74c3c'}">🔑 Ключи: ${keysCount} / 1</span><span style="color:${!isCooldownLoc ? '#2ecc71' : '#e74c3c'}">⏳ Таймер: ${isCooldownLoc ? timeLoc + ' мин' : 'Доступно'}</span></div><div style="text-align:center;"><button class="btn-zone" style="background:linear-gradient(to bottom, #9b59b6, #8e44ad); border-color:#5b2c6f; padding: 10px 20px; font-size: 1em;" onclick="startDungeon('smuggler_boss')" ${keysCount < 1 || isCooldownLoc || battleStarted || isGathering ? 'disabled' : ''}>Войти в Логово</button></div></div>`;
+
+            if (currentWorldBoss) {
+                let wbCd = p1.worldBossCooldown || 0; let wbIsCd = now < wbCd; let wbTime = wbIsCd ? Math.ceil((wbCd - now) / 60000) : 0;
+                let hpPct = (currentWorldBoss.hp / currentWorldBoss.maxHp) * 100; let uName = document.getElementById('user-email-display').innerText;
+                let parts = Object.values(currentWorldBoss.participants).sort((a,b) => b.damage - a.damage); let myRank = parts.findIndex(p => p.name === uName) + 1; let top10 = parts.slice(0, 10);
+                let isClaimed = p1.claimedBossRounds.includes(currentWorldBoss.roundId); let canClaim = currentWorldBoss.isDead && myRank > 0 && !isClaimed;
+
+                html += `<div class="shop-panel panel-boss" style="max-width: 600px; margin: 20px auto 0 auto;"><h3 style="color: #f1c40f; text-align: center; margin-top:0; text-shadow: 2px 2px 4px #000;">Мировой Босс: Древний Дракон</h3><div style="display:flex; justify-content:center; margin-bottom:10px;"><div class="item-icon" style="width:80px; height:80px; border-color:#f1c40f; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:3em;">🐉</div></div><p style="text-align:center; font-size:0.9em; color:#bdc3c7;">Общее здоровье на весь сервер. Нанесите максимум урона, пока живы! ТОП-3 получают Шедевры (★).</p><div class="hp-bar-container" style="margin-bottom: 10px; border-color:#f1c40f;"><div class="hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #c0392b, #e74c3c);"></div><div class="hp-text">${Math.floor(currentWorldBoss.hp)} / ${currentWorldBoss.maxHp} HP</div></div>${currentWorldBoss.isDead ? `<p style="text-align:center; color:#2ecc71; font-weight:bold; font-size:1.2em; text-shadow:1px 1px 2px #000;">☠️ БОСС ПОВЕРЖЕН! Ожидание респавна...</p>` : ''}<div class="leaderboard-list"><div style="text-align:center; font-weight:bold; color:#f1c40f; margin-bottom:10px; border-bottom:1px solid #7f8c8d; padding-bottom:5px;">🏆 ТОП-10 Дамагеров</div>${top10.map((p, idx) => `<div class="leaderboard-item"><span><b style="color:#bdc3c7;">${idx+1}.</b> ${p.name}</span> <span style="color:#e74c3c; font-weight:bold;">${p.damage} ур.</span></div>`).join('')}${top10.length === 0 ? '<div style="text-align:center; color:#7f8c8d; font-size:0.9em;">Пока никто не атаковал босса.</div>' : ''}</div><div style="text-align:center; margin-top: 15px;">${canClaim ? `<button class="btn-zone" style="background:linear-gradient(to bottom, #2ecc71, #27ae60); padding: 10px 20px; font-size: 1.1em;" onclick="claimWorldBossReward()">🎁 Забрать награду</button>` : `<button class="btn-zone" style="background:linear-gradient(to bottom, #f39c12, #e67e22); border-color:#a04000; padding: 10px 20px; font-size: 1em;" onclick="startWorldBoss()" ${wbIsCd || battleStarted || isGathering || currentWorldBoss.isDead ? 'disabled' : ''}>${wbIsCd ? `Кулдаун: ${wbTime} мин` : 'Напасть на Босса'}</button>`}</div></div>`;
+            }
+            document.getElementById('dungeon-list').innerHTML = html;
+        }
+
+        function startDungeon(bossId) {
+            let keysCount = p1.inventory.filter(i => i.id === 'key1').length; let now = Date.now(); let cd = p1.instanceCooldowns['boss1'] || 0;
+            if (keysCount < 1 || now < cd || battleStarted || isGathering) return;
+            let keyIdx = p1.inventory.findIndex(i => i.id === 'key1'); p1.inventory.splice(keyIdx, 1);
+            p1.instanceCooldowns['boss1'] = now + (60 * 60 * 1000); saveGameProgress(); selectMonster(bossId); switchTab('dungeon');
+            document.getElementById('battleLog').innerHTML = `<p style="color:#8e44ad; font-weight:bold; text-align:center;">🚪 Вы вставили Ржавый ключ в замочную скважину и вошли в Подземелье...</p>`;
+        }
+
+        function startWorldBoss() {
+            let now = Date.now(); let cd = p1.worldBossCooldown || 0; if (now < cd || battleStarted || isGathering || !currentWorldBoss || currentWorldBoss.isDead) return;
+            p1.worldBossCooldown = now + (5 * 60 * 1000); p1.sessionDamage = 0; saveGameProgress();
+            selectMonster('world_dragon'); p2.hp = currentWorldBoss.hp; p2.maxHp = currentWorldBoss.maxHp; updateUI(); switchTab('dungeon');
+            document.getElementById('battleLog').innerHTML = `<p style="color:#f1c40f; font-weight:bold; text-align:center; font-size:1.2em; text-shadow:1px 1px 2px #000;">🔥 Вы вступили в бой с Мировым Боссом! Продержитесь как можно дольше!</p>`;
+        }
+
         function renderInventory() {
             let html = `<h3 style="margin-top:0;">Рюкзак</h3><div class="money-display">${formatMoney(p1.money)}</div><div class="inv-list">`;
             if (p1.inventory.length === 0) html += '<p style="text-align:center; color:#7f8c8d; font-size:0.9em; margin: 10px 0;">Рюкзак пуст</p>';
@@ -448,10 +610,10 @@
                 p1.inventory.forEach((item, index) => {
                     let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
                     let baseItem = itemsRegistry[item.slot]?.find(i => i.id === item.id); let imgSrc = baseItem ? baseItem.image : '';
-                    if (item.slot === 'runes') { html += `<div class="inv-item"><div class="item-content"><img src="${imgSrc}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div><button class="btn-system" style="width: auto; padding: 5px; background: #8e44ad; border-color: #5b2c6f;" onclick="openRuneModal(${index})" ${battleStarted ? 'disabled' : ''}>Встроить</button></div>`; } 
-                    else if (item.slot === 'consumables') { html += `<div class="inv-item"><div class="item-content"><img src="${imgSrc}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div><button class="btn-system" style="width: auto; padding: 5px; background: #e67e22; border-color: #a04000;" onclick="useConsumable(${index})" ${battleStarted ? 'disabled' : ''}>Использ.</button></div>`; } 
-                    else if (item.slot === 'materials' || item.slot === 'keys' || item.slot === 'trophies') { html += `<div class="inv-item"><div class="item-content"><img src="${imgSrc}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div></div>`; } 
-                    else { html += `<div class="inv-item"><div class="item-content"><img src="${imgSrc}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div><button class="btn-stat-plus" style="width: auto; padding: 5px 10px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`; }
+                    if (item.slot === 'runes') { html += `<div class="inv-item"><div class="item-content"><!-- <img src="${imgSrc}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div><button class="btn-system" style="width: auto; padding: 5px; background: #8e44ad; border-color: #5b2c6f;" onclick="openRuneModal(${index})" ${battleStarted ? 'disabled' : ''}>Встроить</button></div>`; } 
+                    else if (item.slot === 'consumables') { html += `<div class="inv-item"><div class="item-content"><!-- <img src="${imgSrc}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div><button class="btn-system" style="width: auto; padding: 5px; background: #e67e22; border-color: #a04000;" onclick="useConsumable(${index})" ${battleStarted ? 'disabled' : ''}>Использ.</button></div>`; } 
+                    else if (item.slot === 'materials' || item.slot === 'keys' || item.slot === 'trophies') { html += `<div class="inv-item"><div class="item-content"><!-- <img src="${imgSrc}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div></div>`; } 
+                    else { html += `<div class="inv-item"><div class="item-content"><!-- <img src="${imgSrc}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div></div><button class="btn-stat-plus" style="width: auto; padding: 5px 10px;" onclick="equipFromInv(${index})" ${battleStarted ? 'disabled' : ''}>Надеть</button></div>`; }
                 });
             }
             html += '</div>'; let panel = document.getElementById('inventory-p1'); if(panel) panel.innerHTML = html;
@@ -684,7 +846,7 @@
                 if (!m.isLocalBoss && Math.random() < 0.10) { let keyItem = createItemInst(itemsRegistry.keys[0]); p1.inventory.push(keyItem); logMsg += `<p style="color:#e67e22; font-weight:bold;">🔑 Вы нашли: ${keyItem.name}!</p>`; }
                 let questLogs = []; p1.quests.forEach(q => { if (q.status === 'active') { let dbQ = questsDB.find(x => x.id === q.id); if (dbQ && dbQ.targetType === 'kill' && dbQ.targetId === p2.monsterId) { q.progress++; if (q.progress >= dbQ.targetCount) questLogs.push(`<p style="color:#3498db; font-weight:bold;">📜 Задание «${dbQ.title}» выполнено!</p>`); else questLogs.push(`<p style="color:#3498db;">📜 Прогресс задания «${dbQ.title}»: ${q.progress} / ${dbQ.targetCount}</p>`); } } }); logMsg += questLogs.join('');
             }
-            let levelUpLogs = []; checkLevelUp(levelUpLogs); endBattleUI(logMsg + levelUpLogs.join('')); saveGameProgress(); 
+            let levelUpLogs = []; checkLevelUp(levelUpLogs); endBattleUI(logMsg + levelUpLogs.join('')); saveGameProgress();
             if (p2.isPvP) { renderPvP(); }
             if (p2.isLocalBoss) { renderDungeon(); }
         }
@@ -757,7 +919,8 @@
             p2.baseStats = JSON.parse(JSON.stringify(m.baseStats)); p2.isWorldBoss = m.isWorldBoss || false; p2.isLocalBoss = m.isLocalBoss || false; p2.isPvP = false;
             unequipAll(2);
             document.getElementById('fighter2-header').innerHTML = `<select id="monster-select" class="btn-system" style="font-size: 0.9em; padding: 8px; width: 80%; background: #1a252f; color: #f1c40f; border: 1px solid #f1c40f;" onchange="selectMonster(this.value)"><option value="kret" ${monsterId === 'kret' ? 'selected' : ''}>🐭 Кретс-малыш (1 ур.)</option><option value="morok" ${monsterId === 'morok' ? 'selected' : ''}>🤺 Бот Морок (1 ур.)</option><option value="zigred" ${monsterId === 'zigred' ? 'selected' : ''}>🐝 Зигред (2 ур.)</option><option value="thug" ${monsterId === 'thug' ? 'selected' : ''}>🥷 Головорез (3 ур.)</option></select>`;
-            document.getElementById('avatar-p2').src = p2.image; document.getElementById('p2-paper-doll').style.display = 'none';
+            //document.getElementById('avatar-p2').src = p2.image; 
+            document.getElementById('p2-paper-doll').style.display = 'none';
             p2.hp = getTotalStats(p2).maxHp; updateUI();
         }
 
@@ -776,178 +939,7 @@
         function changeLevel(playerId, delta) { if (battleStarted) return; let player = playerId === 1 ? p1 : p2; if (player.level + delta < 1) return; player.level += delta; updateUI(); if(playerId === 1) saveGameProgress(); }
         function changeStat(playerId, statKey, delta) { if (battleStarted) return; let player = playerId === 1 ? p1 : p2; player.baseStats[statKey] += delta; updateUI(); if(playerId === 1) saveGameProgress(); }
 
-        // ================= PVP АРЕНА =================
-        async function renderPvP() {
-            document.getElementById('pvp-list').innerHTML = '<p style="text-align:center;">Связь с сервером...</p>';
-            let data = []; if (supabaseClient && currentUser) { const res = await supabaseClient.from('saves').select('id, game_data').not('id', 'eq', 'global_world_boss'); data = res.data || []; }
-            let html = `<div class="shop-panel panel-pvp" style="max-width: 600px; margin: 0 auto;"><h3 style="color: #e74c3c; text-align: center; margin-top:0; text-shadow: 2px 2px 4px #000;">Арена Гладиаторов</h3><p style="text-align:center; font-size:0.95em;">Сразитесь с тенью реальных игроков! За победу вы получите славу (+10 Рейтинга).</p><div style="text-align:center; font-size:1.3em; margin-bottom:15px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid #c0392b;">Ваш рейтинг: <b style="color:#f1c40f;">${p1.rating || 0}</b> 🏆</div><div style="text-align:center; margin-bottom: 20px;"><button class="btn-zone" style="background:linear-gradient(to bottom, #c0392b, #922b21); padding: 15px 30px; font-size: 1.1em; border-color:#7b241c;" onclick="findPvPOpponent()" ${battleStarted || isGathering ? 'disabled' : ''}>⚔️ НАЙТИ ПРОТИВНИКА</button></div><div class="leaderboard-list"><div style="text-align:center; font-weight:bold; color:#f1c40f; margin-bottom:10px; font-size:1.1em; border-bottom:1px solid #7f8c8d; padding-bottom:5px;">🏆 ТОП-10 Сервера</div>`;
-            
-            let realPlayers = []; if (data && data.length > 0) realPlayers = data.filter(d => d.id !== (currentUser ? currentUser.id : null) && d.game_data && d.game_data.email); 
-            if (realPlayers.length === 0) {
-                realPlayers = [
-                    { id: 'bot1', game_data: { email: 'Спартак (ИИ)', level: 2, rating: 50, baseStats: { str: 8, agi: 6, int: 6, def: 6, vit: 8, ini: 2, crit: 0, dodge: 0, block: 0 }, equipment: { head: null, armor: null, weapon: createItemInst(itemsRegistry.weapon[0]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } },
-                    { id: 'bot2', game_data: { email: 'Ахиллес (ИИ)', level: 3, rating: 120, baseStats: { str: 10, agi: 8, int: 5, def: 8, vit: 10, ini: 5, crit: 5, dodge: 0, block: 0 }, equipment: { head: null, armor: createItemInst(itemsRegistry.armor[0]), weapon: createItemInst(itemsRegistry.weapon[1]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } }
-                ];
-            }
-            window.cachedPvPPlayers = realPlayers;
-            let leaderboardPlayers = [...realPlayers]; let myName = document.getElementById('user-email-display').innerText;
-            leaderboardPlayers.push({ id: currentUser ? currentUser.id : 'me', game_data: { email: myName + ' (Вы)', level: p1.level, rating: p1.rating || 0 } });
-            let sorted = leaderboardPlayers.sort((a, b) => (b.game_data.rating || 0) - (a.game_data.rating || 0)).slice(0, 10);
-            
-            sorted.forEach((p, idx) => {
-                let name = p.game_data.email ? p.game_data.email.split('@')[0] : 'Гладиатор'; let isMe = p.id === (currentUser ? currentUser.id : 'me'); let nameHtml = isMe ? `<span style="color:#2ecc71; font-weight:bold;">${name}</span>` : name;
-                html += `<div class="leaderboard-item"><span><b style="color:#bdc3c7;">${idx+1}.</b> ${nameHtml} <span style="color:#7f8c8d; font-size:0.8em;">(Ур. ${p.game_data.level || 1})</span></span> <span style="color:#f1c40f; font-weight:bold; font-size:1.1em;">${p.game_data.rating || 0} 🏆</span></div>`;
-            });
-            html += `</div></div>`; document.getElementById('pvp-list').innerHTML = html;
-        }
-
-        function findPvPOpponent() {
-            if (!window.cachedPvPPlayers || window.cachedPvPPlayers.length === 0) { document.getElementById('pvp-msg').innerText = "Нет доступных противников для боя!"; setTimeout(() => { document.getElementById('pvp-msg').innerText = ""; }, 3000); return; }
-            let randomOpp = window.cachedPvPPlayers[Math.floor(Math.random() * window.cachedPvPPlayers.length)]; let oppData = randomOpp.game_data;
-            p2.monsterId = 'pvp_player'; p2.name = oppData.email ? oppData.email.split('@')[0] : "Гладиатор"; p2.image = 'human.gif'; p2.level = oppData.level || 1;
-            p2.baseStats = oppData.baseStats || JSON.parse(JSON.stringify(baseStatsTemplate)); p2.equipment = oppData.equipment || { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }; p2.injuries = oppData.injuries || {};
-            p2.isPvP = true; p2.isWorldBoss = false; p2.isLocalBoss = false;
-            
-            document.getElementById('fighter2-header').innerHTML = `<span style="color:#e74c3c;">${p2.name}</span>`;
-            document.getElementById('avatar-p2').src = p2.image; document.getElementById('p2-paper-doll').style.display = 'block';
-            p2.hp = getTotalStats(p2).maxHp; updateUI(); switchTab('pvp');
-            document.getElementById('battleLog').innerHTML = `<p style="color:#e74c3c; font-weight:bold; text-align:center;">⚔️ Вы вышли на Арену против Гладиатора: ${p2.name}!</p>`;
-        }
-
-        // ================= ДОБЫЧА =================
-        function getGatherColorInfo(diff) {
-            if (diff < 0) return { color: 'gray', class: 'node-gray', chance: 0, text: 'Слишком сложно' };
-            if (diff <= 10) return { color: '#e67e22', class: 'node-orange', chance: 0.75, text: 'Оранжевый (75%)' };
-            if (diff <= 20) return { color: '#3498db', class: 'node-blue', chance: 0.30, text: 'Синий (30%)' };
-            if (diff <= 30) return { color: '#2ecc71', class: 'node-green', chance: 0.10, text: 'Зеленый (10%)' };
-            return { color: '#95a5a6', class: 'node-gray', chance: 0, text: 'Серый (0%)' };
-        }
-
-        function renderGather() {
-            document.getElementById('prof-herbalist-lvl').innerText = p1.professions.herbalist; document.getElementById('prof-geologist-lvl').innerText = p1.professions.geologist;
-            let html = ''; let tool = p1.equipment.tool;
-            gatherNodesDB.forEach(node => {
-                let curSkill = p1.professions[node.prof]; let diff = curSkill - node.reqSkill; let info = getGatherColorInfo(diff);
-                let hasCorrectTool = tool && tool.prof === node.prof; let canGather = hasCorrectTool && diff >= 0 && !isGathering && !battleStarted;
-                let resBase = itemsRegistry.materials.find(m => m.id === node.resId);
-                let btnText = !tool ? 'Нужен инструмент' : (tool.prof !== node.prof ? 'Не тот инструмент' : 'Добывать');
-
-                html += `<div class="shop-item" style="border-left: 4px solid ${info.color}; margin-bottom:10px;"><div class="item-content"><img src="${resBase.image}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name" style="color:${info.color}">${node.name}</span><span class="item-stats">Мин. навык: ${node.reqSkill} | Добывается: ${resBase.name}</span></div></div><button class="btn-system" style="background:${canGather ? '#27ae60' : '#7f8c8d'}; padding:8px 15px;" onclick="startGather('${node.id}')" ${!canGather ? 'disabled' : ''}>${btnText}</button></div>`;
-            });
-            if (html === '') { html = '<p style="text-align:center; color:#bdc3c7;">Нет доступных ресурсов.</p>'; }
-            document.getElementById('gather-list').innerHTML = html;
-        }
-
-        function startGather(nodeId) {
-            if (isGathering || battleStarted) return; let node = gatherNodesDB.find(n => n.id === nodeId);
-            if (!node || !p1.equipment.tool || p1.equipment.tool.prof !== node.prof) return;
-
-            isGathering = true; renderGather(); 
-            let progContainer = document.getElementById('gather-progress'); let progBar = document.getElementById('gather-bar'); let progText = document.getElementById('gather-text');
-            progContainer.style.display = 'block'; progBar.style.width = '0%'; progBar.style.transition = 'none'; progText.innerText = 'Процесс добычи...';
-            setTimeout(() => { progBar.style.transition = `width ${node.time}ms linear`; progBar.style.width = '100%'; }, 50);
-            gatherTimerInterval = setTimeout(() => { finishGather(node); }, node.time);
-        }
-
-        function finishGather(node) {
-            isGathering = false; document.getElementById('gather-progress').style.display = 'none';
-            let curSkill = p1.professions[node.prof]; let diff = curSkill - node.reqSkill; let info = getGatherColorInfo(diff);
-            let successChance = 0.70 + (diff * 0.02); if (successChance > 0.95) successChance = 0.95; 
-            
-            let msg = ''; let msgColor = '';
-            if (Math.random() <= successChance) {
-                let doubleProc = Math.random() < 0.06; let count = doubleProc ? 2 : 1; let resBase = itemsRegistry.materials.find(m => m.id === node.resId);
-                for(let i=0; i<count; i++) p1.inventory.push(createItemInst(resBase));
-                msg = doubleProc ? `🔥 ДУБЛЬ! Вы добыли ${resBase.name} (2 шт)!` : `Успех! Вы добыли ${resBase.name}.`; msgColor = doubleProc ? '#f1c40f' : '#2ecc71';
-                if (Math.random() <= info.chance) { p1.professions[node.prof]++; msg += ` Ваш навык вырос!`; }
-            } else { msg = 'Неудача... Вы ничего не добыли.'; msgColor = '#e74c3c'; }
-
-            let msgDiv = document.getElementById('gather-msg'); msgDiv.style.color = msgColor; msgDiv.innerText = msg; setTimeout(() => { msgDiv.innerText = ""; }, 3000);
-            renderGather(); updateUI(); saveGameProgress();
-        }
-
-        // ================= ПОДЗЕМЕЛЬЯ И МИРОВОЙ БОСС =================
-        async function fetchWorldBoss() {
-            if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('saves').select('game_data').eq('id', 'global_world_boss').single();
-            if (data && data.game_data) {
-                currentWorldBoss = data.game_data;
-                if (currentWorldBoss.isDead && (Date.now() - currentWorldBoss.killTime > 12 * 60 * 60 * 1000)) {
-                    currentWorldBoss = { hp: 100000, maxHp: 100000, roundId: currentWorldBoss.roundId + 1, participants: {}, isDead: false, killTime: null };
-                    await supabaseClient.from('saves').upsert({ id: 'global_world_boss', game_data: currentWorldBoss });
-                }
-            } else {
-                if (p1.localWorldBoss && p1.localWorldBoss.isDead && (Date.now() - p1.localWorldBoss.killTime > 12 * 60 * 60 * 1000)) {
-                    currentWorldBoss = { hp: 100000, maxHp: 100000, roundId: p1.localWorldBoss.roundId + 1, participants: {}, isDead: false, killTime: null };
-                    p1.localWorldBoss = currentWorldBoss; saveGameProgress();
-                } else if (p1.localWorldBoss) currentWorldBoss = p1.localWorldBoss;
-                else currentWorldBoss = { hp: 100000, maxHp: 100000, roundId: 1, participants: {}, isDead: false, killTime: null };
-                await supabaseClient.from('saves').upsert({ id: 'global_world_boss', game_data: currentWorldBoss });
-            }
-        }
-
-        async function submitWorldBossDamage(dmg) {
-            if (dmg <= 0) return; let boss = currentWorldBoss;
-            if (supabaseClient) { const { data } = await supabaseClient.from('saves').select('game_data').eq('id', 'global_world_boss').single(); if (data && data.game_data) boss = data.game_data; }
-            if (boss && boss.isDead) return;
-            boss.hp -= dmg; if (boss.hp <= 0) { boss.hp = 0; boss.isDead = true; boss.killTime = Date.now(); }
-            let uName = document.getElementById('user-email-display').innerText;
-            if (!boss.participants[currentUser ? currentUser.id : 'me']) boss.participants[currentUser ? currentUser.id : 'me'] = { name: uName, damage: 0 };
-            boss.participants[currentUser ? currentUser.id : 'me'].damage += dmg;
-            if (supabaseClient) { const upsertRes = await supabaseClient.from('saves').upsert({ id: 'global_world_boss', game_data: boss }); if (upsertRes.error) { p1.localWorldBoss = boss; saveGameProgress(); } } 
-            else { p1.localWorldBoss = boss; saveGameProgress(); }
-            currentWorldBoss = boss;
-        }
-
-        function showDungeonMsg(htmlText) { let msgDiv = document.getElementById('dungeon-msg'); msgDiv.innerHTML = htmlText; setTimeout(() => { msgDiv.innerHTML = ""; }, 5000); }
-
-        function claimWorldBossReward() {
-            if (!currentWorldBoss || !currentWorldBoss.isDead || p1.claimedBossRounds.includes(currentWorldBoss.roundId)) return;
-            let parts = Object.values(currentWorldBoss.participants).sort((a,b) => b.damage - a.damage);
-            let uName = document.getElementById('user-email-display').innerText; let myRank = parts.findIndex(p => p.name === uName) + 1;
-            if (myRank === 0) return; p1.claimedBossRounds.push(currentWorldBoss.roundId); p1.exp += 1500; p1.money += 10000;
-            let log = `<p>Награда Босса: 1500 Опыта и 1 Золотой за участие!</p>`;
-            if (myRank <= 3) {
-                let dropCategories = ['head', 'armor', 'weapon', 'shield', 'foot', 'runes']; let randomCat = dropCategories[Math.floor(Math.random() * dropCategories.length)];
-                let randomItem = itemsRegistry[randomCat][Math.floor(Math.random() * itemsRegistry[randomCat].length)]; let droppedGear = createItemInst(randomItem);
-                let statsToRaise = ['str', 'agi', 'int', 'def', 'vit']; let randomStat = statsToRaise[Math.floor(Math.random() * statsToRaise.length)];
-                if(!droppedGear.stats) droppedGear.stats = {}; droppedGear.stats[randomStat] = (droppedGear.stats[randomStat] || 0) + 2; droppedGear.name = '★ ' + droppedGear.name;
-                p1.inventory.push(droppedGear); log += `<p style="color:#f1c40f; font-weight:bold;">👑 ТОП-${myRank}! ЭПИЧЕСКАЯ НАГРАДА: ${droppedGear.name}!</p>`;
-            }
-            showDungeonMsg(log); saveGameProgress(); renderDungeon();
-        }
-
-        function renderDungeon() {
-            let now = Date.now(); let cdLoc = p1.instanceCooldowns['boss1'] || 0; let isCooldownLoc = now < cdLoc; let timeLoc = isCooldownLoc ? Math.ceil((cdLoc - now) / 60000) : 0; let keysCount = p1.inventory.filter(i => i.id === 'key1').length;
-            let html = `<div class="shop-panel panel-dung" style="max-width: 600px; margin: 0 auto;"><h3 style="color: #9b59b6; text-align: center; margin-top:0;">Логово Контрабандистов</h3><div style="display:flex; justify-content:center; margin-bottom:10px;"><img src="boss_smuggler.gif" class="item-icon" style="width:60px; height:60px; border-radius:10px;" onerror="this.src='${placeholderImg}'"></div><p style="text-align:center; font-size:0.95em;">Скрывается Главарь (Ур. 5). За победу вы гарантированно получите Экипировку или Руну.</p><div style="display:flex; justify-content:space-around; margin: 15px 0; font-weight:bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; border:1px solid #7f8c8d;"><span style="color:${keysCount > 0 ? '#2ecc71' : '#e74c3c'}">🔑 Ключи: ${keysCount} / 1</span><span style="color:${!isCooldownLoc ? '#2ecc71' : '#e74c3c'}">⏳ Таймер: ${isCooldownLoc ? timeLoc + ' мин' : 'Доступно'}</span></div><div style="text-align:center;"><button class="btn-zone" style="background:linear-gradient(to bottom, #9b59b6, #8e44ad); border-color:#5b2c6f; padding: 10px 20px; font-size: 1em;" onclick="startDungeon('smuggler_boss')" ${keysCount < 1 || isCooldownLoc || battleStarted || isGathering ? 'disabled' : ''}>Войти в Логово</button></div></div>`;
-
-            if (currentWorldBoss) {
-                let wbCd = p1.worldBossCooldown || 0; let wbIsCd = now < wbCd; let wbTime = wbIsCd ? Math.ceil((wbCd - now) / 60000) : 0;
-                let hpPct = (currentWorldBoss.hp / currentWorldBoss.maxHp) * 100; let uName = document.getElementById('user-email-display').innerText;
-                let parts = Object.values(currentWorldBoss.participants).sort((a,b) => b.damage - a.damage); let myRank = parts.findIndex(p => p.name === uName) + 1; let top10 = parts.slice(0, 10);
-                let isClaimed = p1.claimedBossRounds.includes(currentWorldBoss.roundId); let canClaim = currentWorldBoss.isDead && myRank > 0 && !isClaimed;
-
-                html += `<div class="shop-panel panel-boss" style="max-width: 600px; margin: 20px auto 0 auto;"><h3 style="color: #f1c40f; text-align: center; margin-top:0; text-shadow: 2px 2px 4px #000;">Мировой Босс: Древний Дракон</h3><div style="display:flex; justify-content:center; margin-bottom:10px;"><img src="dragon.gif" class="item-icon" style="width:80px; height:80px; border-color:#f1c40f; border-radius:10px;" onerror="this.src='${placeholderImg}'"></div><p style="text-align:center; font-size:0.9em; color:#bdc3c7;">Общее здоровье на весь сервер. Нанесите максимум урона, пока живы! ТОП-3 получают Шедевры (★).</p><div class="hp-bar-container" style="margin-bottom: 10px; border-color:#f1c40f;"><div class="hp-bar" style="width: ${hpPct}%; background: linear-gradient(90deg, #c0392b, #e74c3c);"></div><div class="hp-text">${Math.floor(currentWorldBoss.hp)} / ${currentWorldBoss.maxHp} HP</div></div>${currentWorldBoss.isDead ? `<p style="text-align:center; color:#2ecc71; font-weight:bold; font-size:1.2em; text-shadow:1px 1px 2px #000;">☠️ БОСС ПОВЕРЖЕН! Ожидание респавна...</p>` : ''}<div class="leaderboard-list"><div style="text-align:center; font-weight:bold; color:#f1c40f; margin-bottom:10px; border-bottom:1px solid #7f8c8d; padding-bottom:5px;">🏆 ТОП-10 Дамагеров</div>${top10.map((p, idx) => `<div class="leaderboard-item"><span><b style="color:#bdc3c7;">${idx+1}.</b> ${p.name}</span> <span style="color:#e74c3c; font-weight:bold;">${p.damage} ур.</span></div>`).join('')}${top10.length === 0 ? '<div style="text-align:center; color:#7f8c8d; font-size:0.9em;">Пока никто не атаковал босса.</div>' : ''}</div><div style="text-align:center; margin-top: 15px;">${canClaim ? `<button class="btn-zone" style="background:linear-gradient(to bottom, #2ecc71, #27ae60); padding: 10px 20px; font-size: 1.1em;" onclick="claimWorldBossReward()">🎁 Забрать награду</button>` : `<button class="btn-zone" style="background:linear-gradient(to bottom, #f39c12, #e67e22); border-color:#a04000; padding: 10px 20px; font-size: 1em;" onclick="startWorldBoss()" ${wbIsCd || battleStarted || isGathering || currentWorldBoss.isDead ? 'disabled' : ''}>${wbIsCd ? `Кулдаун: ${wbTime} мин` : 'Напасть на Босса'}</button>`}</div></div>`;
-            }
-            document.getElementById('dungeon-list').innerHTML = html;
-        }
-
-        function startDungeon(bossId) {
-            let keysCount = p1.inventory.filter(i => i.id === 'key1').length; let now = Date.now(); let cd = p1.instanceCooldowns['boss1'] || 0;
-            if (keysCount < 1 || now < cd || battleStarted || isGathering) return;
-            let keyIdx = p1.inventory.findIndex(i => i.id === 'key1'); p1.inventory.splice(keyIdx, 1);
-            p1.instanceCooldowns['boss1'] = now + (60 * 60 * 1000); saveGameProgress(); selectMonster(bossId); switchTab('dungeon');
-            document.getElementById('battleLog').innerHTML = `<p style="color:#8e44ad; font-weight:bold; text-align:center;">🚪 Вы вставили Ржавый ключ в замочную скважину и вошли в Подземелье...</p>`;
-        }
-
-        function startWorldBoss() {
-            let now = Date.now(); let cd = p1.worldBossCooldown || 0; if (now < cd || battleStarted || isGathering || !currentWorldBoss || currentWorldBoss.isDead) return;
-            p1.worldBossCooldown = now + (5 * 60 * 1000); p1.sessionDamage = 0; saveGameProgress();
-            selectMonster('world_dragon'); p2.hp = currentWorldBoss.hp; p2.maxHp = currentWorldBoss.maxHp; updateUI(); switchTab('dungeon');
-            document.getElementById('battleLog').innerHTML = `<p style="color:#f1c40f; font-weight:bold; text-align:center; font-size:1.2em; text-shadow:1px 1px 2px #000;">🔥 Вы вступили в бой с Мировым Боссом! Продержитесь как можно дольше!</p>`;
-        }
-
-        // ================= ОСТАЛЬНЫЕ ВКЛАДКИ =================
+        // ================= МАГАЗИН И ФРАКЦИИ =================
         function renderShop() {
             document.getElementById('shop-money-display').innerHTML = formatMoney(p1.money); let buyHtml = '';
             for (let slotId in itemsRegistry) {
@@ -955,7 +947,7 @@
                 itemsRegistry[slotId].forEach(item => {
                     if (item.isFaction) return; 
                     let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
-                    buyHtml += `<div class="shop-item"><div class="item-content"><img src="${item.image}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span><span class="shop-item-price">${formatMoney(item.price)}</span></div></div><button class="btn-system" style="width:auto; padding: 6px 12px; height:auto;" onclick="buyItem('${slotId}', '${item.id}')">Купить</button></div>`;
+                    buyHtml += `<div class="shop-item"><div class="item-content"><!-- <img src="${item.image}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span><span class="shop-item-price">${formatMoney(item.price)}</span></div></div><button class="btn-system" style="width:auto; padding: 6px 12px; height:auto;" onclick="buyItem('${slotId}', '${item.id}')">Купить</button></div>`;
                 });
             }
             document.getElementById('shop-buy-list').innerHTML = buyHtml;
@@ -966,7 +958,7 @@
                 p1.inventory.forEach((item, index) => {
                     let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof);
                     let baseItem = itemsRegistry[item.slot].find(i => i.id === item.id); let sellPrice = Math.floor((baseItem.price + (item.addedPrice || 0)) / 2);
-                    sellHtml += `<div class="shop-item" style="border-left: 4px solid #27ae60;"><div class="item-content"><img src="${baseItem.image}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span><span class="shop-item-price">Скупка: ${formatMoney(sellPrice)}</span></div></div><button class="btn-stat-minus" style="width:auto; padding: 6px 12px; height:auto;" onclick="sellItem(${index})">Продать</button></div>`;
+                    sellHtml += `<div class="shop-item" style="border-left: 4px solid #27ae60;"><div class="item-content"><!-- <img src="${baseItem.image}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span><span class="shop-item-price">Скупка: ${formatMoney(sellPrice)}</span></div></div><button class="btn-stat-minus" style="width:auto; padding: 6px 12px; height:auto;" onclick="sellItem(${index})">Продать</button></div>`;
                 });
             }
             document.getElementById('shop-sell-list').innerHTML = sellHtml;
@@ -1002,7 +994,7 @@
                 let limitText = currentRep >= off.maxRep ? '<span style="color:#e74c3c;">Лимит достигнут</span>' : `Макс: ${off.maxRep}`;
                 let itemBase = itemsRegistry.materials.find(m => m.id === off.reqItem) || itemsRegistry.trophies.find(t => t.id === off.reqItem);
                 let imgSrc = itemBase ? itemBase.image : '';
-                html += `<div class="shop-item" style="border-left: 4px solid ${color};"><div class="item-content"><img src="${imgSrc}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${off.name} (У вас: ${pCount})</span><span class="item-stats">+${off.repGain} репутации ${off.faction === 'hunters' ? 'Охотников' : 'Искателей'}</span><span class="shop-item-price">${limitText}</span></div></div><button class="btn-stat-plus" style="width:auto; padding: 6px 12px; height:auto; background:${canSubmit ? color : '#7f8c8d'};" onclick="submitOffering('${off.id}')" ${!canSubmit ? 'disabled' : ''}>Сдать (1 шт)</button></div>`;
+                html += `<div class="shop-item" style="border-left: 4px solid ${color};"><div class="item-content"><!-- <img src="${imgSrc}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${off.name} (У вас: ${pCount})</span><span class="item-stats">+${off.repGain} репутации ${off.faction === 'hunters' ? 'Охотников' : 'Искателей'}</span><span class="shop-item-price">${limitText}</span></div></div><button class="btn-stat-plus" style="width:auto; padding: 6px 12px; height:auto; background:${canSubmit ? color : '#7f8c8d'};" onclick="submitOffering('${off.id}')" ${!canSubmit ? 'disabled' : ''}>Сдать (1 шт)</button></div>`;
             });
 
             html += `</div></div><div class="shop-panel"><h3 style="text-align:center; margin-top:0; color:#f1c40f;">Награды (Покупка)</h3><div style="text-align:center; margin-bottom:10px; font-weight:bold;">Баланс: ${formatMoney(p1.money)}</div><div class="shop-list">`;
@@ -1013,7 +1005,7 @@
                     let baseItem = itemsRegistry[slotId].find(i => i.id === fItem.itemId);
                     let currentRep = p1.reputations[fac] || 0; let meetsRep = currentRep >= fItem.reqRep; let meetsMoney = p1.money >= baseItem.price;
                     let canBuy = meetsRep && meetsMoney; let color = fac === 'hunters' ? '#e74c3c' : '#2ecc71';
-                    html += `<div class="shop-item" style="border-left: 4px solid ${color};"><div class="item-content"><img src="${baseItem.image}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${baseItem.name}</span><span class="item-stats">Требует: <b style="color:${meetsRep ? '#2ecc71' : '#e74c3c'}">${fItem.reqRep} репутации</b></span><span class="shop-item-price">${formatMoney(baseItem.price)}</span></div></div><button class="btn-system" style="width:auto; padding: 6px 12px; height:auto; background:${canBuy ? 'linear-gradient(to bottom, #3498db, #2980b9)' : '#7f8c8d'}; border-color:${canBuy ? '#1f618d' : '#95a5a6'};" onclick="buyFactionItem('${fItem.itemId}', '${slotId}', ${fItem.reqRep}, '${fac}')" ${!canBuy ? 'disabled' : ''}>Купить</button></div>`;
+                    html += `<div class="shop-item" style="border-left: 4px solid ${color};"><div class="item-content"><!-- <img src="${baseItem.image}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${baseItem.name}</span><span class="item-stats">Требует: <b style="color:${meetsRep ? '#2ecc71' : '#e74c3c'}">${fItem.reqRep} репутации</b></span><span class="shop-item-price">${formatMoney(baseItem.price)}</span></div></div><button class="btn-system" style="width:auto; padding: 6px 12px; height:auto; background:${canBuy ? 'linear-gradient(to bottom, #3498db, #2980b9)' : '#7f8c8d'}; border-color:${canBuy ? '#1f618d' : '#95a5a6'};" onclick="buyFactionItem('${fItem.itemId}', '${slotId}', ${fItem.reqRep}, '${fac}')" ${!canBuy ? 'disabled' : ''}>Купить</button></div>`;
                 });
             });
             html += `</div></div></div>`; document.getElementById('factions-list').innerHTML = html;
@@ -1041,7 +1033,7 @@
             recipesDB.forEach(rec => {
                 let matBase = itemsRegistry.materials.find(m => m.id === rec.reqType); let pCount = p1.inventory.filter(i => i.id === rec.reqType).length;
                 let resBase = itemsRegistry[rec.resultSlot].find(i => i.id === rec.resultId); let canCraft = pCount >= rec.reqCount; let btnColor = canCraft ? 'linear-gradient(to bottom, #e67e22, #d35400)' : '#7f8c8d';
-                html += `<div class="shop-item" style="border-left: 4px solid #e67e22;"><div class="item-content"><img src="${resBase.image}" class="item-icon" onerror="this.src='${placeholderImg}'"><div class="item-text-info"><span class="item-name">${rec.name}</span><span class="item-stats">Результат: <span style="color:#e67e22;">${resBase.name}</span></span><span class="shop-item-price" style="color:${canCraft ? '#2ecc71' : '#e74c3c'}">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span></div></div><button class="btn-system" style="width:auto; padding: 6px 12px; height:auto; background:${btnColor}; border-color:${canCraft ? '#a04000' : '#95a5a6'};" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button></div>`;
+                html += `<div class="shop-item" style="border-left: 4px solid #e67e22;"><div class="item-content"><!-- <img src="${resBase.image}" class="item-icon"> --><div class="item-text-info"><span class="item-name">${rec.name}</span><span class="item-stats">Результат: <span style="color:#e67e22;">${resBase.name}</span></span><span class="shop-item-price" style="color:${canCraft ? '#2ecc71' : '#e74c3c'}">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span></div></div><button class="btn-system" style="width:auto; padding: 6px 12px; height:auto; background:${btnColor}; border-color:${canCraft ? '#a04000' : '#95a5a6'};" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button></div>`;
             });
             document.getElementById('craft-list').innerHTML = html;
         }
@@ -1090,10 +1082,10 @@
             updateUI(); renderQuests(); saveGameProgress();
         }
 
+        // ================= НАВИГАЦИЯ МЕЖДУ ВКЛАДКАМИ =================
         async function switchTab(tabId) {
             if (isGathering) return; 
             
-            // Очищаем классы анимации при смене вкладок, чтобы не было фантомных ударов
             document.getElementById('fighter1-card').classList.remove('anim-attack-right', 'anim-attack-left', 'anim-shake');
             document.getElementById('fighter2-card').classList.remove('anim-attack-right', 'anim-attack-left', 'anim-shake');
             
