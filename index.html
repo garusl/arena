@@ -625,8 +625,9 @@
                 return html;
             };
 
-            if(document.getElementById("stats-p1")) document.getElementById("stats-p1").innerHTML = buildStatHtml(1, p1.baseStats, s1.itemBonus, s1.injuryBonus, dmg1.min, dmg1.max, c1, d1, b1); 
-            if(document.getElementById("stats-p2")) document.getElementById("stats-p2").innerHTML = buildStatHtml(2, p2.baseStats, s2.itemBonus, s2.injuryBonus, dmg2.min, dmg2.max, c2, d2, b2);
+            // ИСПРАВЛЕНИЕ: Передаем итоговый объект статов (s1 и s2) вместо базового, чтобы отображалось Итог (+Бонус)
+            if(document.getElementById("stats-p1")) document.getElementById("stats-p1").innerHTML = buildStatHtml(1, s1, s1.itemBonus, s1.injuryBonus, dmg1.min, dmg1.max, c1, d1, b1); 
+            if(document.getElementById("stats-p2")) document.getElementById("stats-p2").innerHTML = buildStatHtml(2, s2, s2.itemBonus, s2.injuryBonus, dmg2.min, dmg2.max, c2, d2, b2);
 
             // В бою (Оверлей)
             if(document.getElementById("name-p1-display")) document.getElementById("name-p1-display").innerText = p1.name; 
@@ -820,7 +821,7 @@
                 let resBase = itemsRegistry[rec.resultSlot].find(i => i.id === rec.resultId); 
                 let canCraft = pCount >= rec.reqCount; 
                 let btnColor = canCraft ? 'linear-gradient(to bottom, #e67e22, #d35400)' : '#7f8c8d'; 
-                html += `<div class="item-row" style="border-left-color:#e67e22; margin-bottom:8px;"><div class="item-info"><span class="item-name">${rec.name}</span><span class="item-stats">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span></div><button class="btn-system" style="padding:4px 8px; font-size:0.8em; background:${btnColor};" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button></div>`; 
+                html += `<div class="item-row" style="border-left-color:#e67e22; margin-bottom:8px;"><div class="item-info"><span class="item-name">${rec.name}</span><span class="item-stats">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span></div><button class="btn-system" style="padding:4px 8px; font-size:0.8em;" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button></div>`; 
             }); 
             cList.innerHTML = html; 
         }
