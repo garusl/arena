@@ -449,9 +449,9 @@
         function getRepRank(rep) { if (rep >= 5000) return { name: 'Медаль Превознесения', color: '#f1c40f' }; if (rep >= 3000) return { name: 'Медаль Почета', color: '#9b59b6' }; if (rep >= 2000) return { name: 'Медаль Уважения', color: '#3498db' }; if (rep >= 1000) return { name: 'Медаль Дружбы', color: '#2ecc71' }; if (rep >= 500) return { name: 'Медаль Признания', color: '#e67e22' }; return { name: 'Нейтрал', color: '#bdc3c7' }; }
 
         const expTable = [0, 0, 720, 4500, 21564, 90864, 198864]; 
-        const baseStatsTemplate = { str: 6, agi: 6, int: 6, def: 6, vit: 6, ini: 0, crit: 0, dodge: 0, block: 0 };
+        const baseStatsTemplate = { str: 10, agi: 10, int: 10, def: 10, vit: 10, ini: 2, crit: 0, dodge: 0, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0 };
         const zones = ['head', 'chest', 'legs']; const zoneNames = { 'head': 'в голову', 'chest': 'в корпус', 'legs': 'в ноги' };
-        const statNamesRU = { str: 'Сил', agi: 'Лов', int: 'Инт', def: 'Защ', vit: 'Жиз', ini: 'Ини', crit: '%Крит', dodge: '%Уворот', block: '%Блок', minDmg: 'МинУр', maxDmg: 'МаксУр' };
+        const statNamesRU = { str: 'Сил', agi: 'Лов', int: 'Инт', def: 'Защ', vit: 'Жив', ini: 'Ини', crit: '%Крит', dodge: '%Уворот', block: '%Блок', antiCrit: '%Антикрит', antiDodge: '%Антиуворот', antiBlock: '%Антиблок', minDmg: 'МинУр', maxDmg: 'МаксУр' };
         const bodyPartsRU = { 'head': 'Голова', 'chest': 'Корпус', 'arms': 'Руки', 'legs': 'Ноги' };
 
         const comboDB = [ { id: 1, title: '«Сила Волка»', seq: ['head', 'head', 'chest'], type: 'addDmg', value: 2 }, { id: 2, title: '«Великая Сила Волка»', seq: ['head', 'chest', 'legs'], type: 'addDmg', value: 5 }, { id: 3, title: '«Жажда Крови»', seq: ['chest', 'chest', 'legs', 'head'], type: 'vampiric', value: 0.5 }, { id: 4, title: '«Ярость Пантеры»', seq: ['legs', 'legs', 'head', 'chest'], type: 'multDmg', value: 1.35 } ];
@@ -478,12 +478,12 @@
         const gatherNodesDB = [ { id: 'gn1', name: 'Куст Чертополоха', prof: 'herbalist', reqSkill: 0, resId: 'm4', time: 3000 }, { id: 'gn2', name: 'Медная жила', prof: 'geologist', reqSkill: 0, resId: 'm5', time: 3000 } ];
 
         const bestiaryDB = [
-            { id: 'kret', name: 'Кретс-малыш', level: 1, dropChance: 0.6, dropItem: 'm1', trophyDrop: 'tr1', trophyChance: 0.5, expReward: 150, moneyReward: { min: 200, max: 500 }, baseStats: { str: 4, agi: 4, int: 2, def: 2, vit: 5, ini: 0, crit: 0, dodge: 0, block: 0 } },
+            { id: 'kret', name: 'Кретс-малыш', level: 1, dropChance: 0.6, dropItem: 'm1', trophyDrop: 'tr1', trophyChance: 0.5, expReward: 150, moneyReward: { min: 200, max: 500 }, baseStats: { str: 4, agi: 4, int: 2, def: 2, vit: 5, ini: 0, crit: 0, dodge: 0, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0 } },
             { id: 'morok', name: 'Бот Морок', level: 1, dropChance: 0.8, dropItem: 'm1', trophyDrop: null, trophyChance: 0, expReward: 300, moneyReward: { min: 910, max: 1500 }, baseStats: { ...baseStatsTemplate } },
-            { id: 'zigred', name: 'Зигред', level: 2, dropChance: 0.6, dropItem: 'm2', trophyDrop: 'tr2', trophyChance: 0.5, expReward: 450, moneyReward: { min: 1500, max: 3000 }, baseStats: { str: 7, agi: 9, int: 4, def: 4, vit: 8, ini: 5, crit: 2, dodge: 5, block: 0 } },
-            { id: 'thug', name: 'Головорез', level: 3, dropChance: 0.6, dropItem: 'm3', trophyDrop: 'tr3', trophyChance: 0.5, expReward: 800, moneyReward: { min: 3500, max: 6000 }, baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5 } },
-            { id: 'smuggler_boss', name: 'Главарь Контрабандистов', level: 5, dropChance: 1.0, dropItem: 'm3', trophyDrop: 'tr4', trophyChance: 1.0, expReward: 2500, moneyReward: { min: 15000, max: 25000 }, baseStats: { str: 14, agi: 8, int: 8, def: 12, vit: 30, ini: 10, crit: 10, dodge: 5, block: 10 }, isLocalBoss: true },
-            { id: 'world_dragon', name: 'Древний Дракон', level: 10, dropChance: 0, dropItem: null, trophyDrop: null, trophyChance: 0, expReward: 0, moneyReward: { min: 0, max: 0 }, baseStats: { str: 25, agi: 10, int: 10, def: 15, vit: 100, ini: 15, crit: 15, dodge: 5, block: 10 }, isWorldBoss: true }
+            { id: 'zigred', name: 'Зигред', level: 2, dropChance: 0.6, dropItem: 'm2', trophyDrop: 'tr2', trophyChance: 0.5, expReward: 450, moneyReward: { min: 1500, max: 3000 }, baseStats: { str: 7, agi: 9, int: 4, def: 4, vit: 8, ini: 5, crit: 2, dodge: 5, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0 } },
+            { id: 'thug', name: 'Головорез', level: 3, dropChance: 0.6, dropItem: 'm3', trophyDrop: 'tr3', trophyChance: 0.5, expReward: 800, moneyReward: { min: 3500, max: 6000 }, baseStats: { str: 10, agi: 5, int: 6, def: 8, vit: 12, ini: 2, crit: 5, dodge: 0, block: 5, antiCrit: 0, antiDodge: 0, antiBlock: 0 } },
+            { id: 'smuggler_boss', name: 'Главарь Контрабандистов', level: 5, dropChance: 1.0, dropItem: 'm3', trophyDrop: 'tr4', trophyChance: 1.0, expReward: 2500, moneyReward: { min: 15000, max: 25000 }, baseStats: { str: 14, agi: 8, int: 8, def: 12, vit: 30, ini: 10, crit: 10, dodge: 5, block: 10, antiCrit: 0, antiDodge: 0, antiBlock: 0 }, isLocalBoss: true },
+            { id: 'world_dragon', name: 'Древний Дракон', level: 10, dropChance: 0, dropItem: null, trophyDrop: null, trophyChance: 0, expReward: 0, moneyReward: { min: 0, max: 0 }, baseStats: { str: 25, agi: 10, int: 10, def: 15, vit: 100, ini: 15, crit: 15, dodge: 5, block: 10, antiCrit: 0, antiDodge: 0, antiBlock: 0 }, isWorldBoss: true }
         ];
 
         const questsDB = [ { id: 'q1', title: 'Очистка подвала', desc: 'Убейте 3 Кретсов.', targetType: 'kill', targetId: 'kret', targetCount: 3, rewardExp: 500, rewardMoney: 2000 }, { id: 'q2', title: 'Угроза с воздуха', desc: 'Уничтожьте 2 Зигредов.', targetType: 'kill', targetId: 'zigred', targetCount: 2, rewardExp: 800, rewardMoney: 3000, rewardItem: 'pot1' }, { id: 'q3', title: 'Экипировка стражи', desc: 'Добудьте 2 Шлема.', targetType: 'collect', targetId: 'h2', targetCount: 2, rewardExp: 200, rewardMoney: 10000 } ];
@@ -491,19 +491,78 @@
         const factionShopDB = { hunters: [ { itemId: 'pot2', reqRep: 500 }, { itemId: 'w_hunt_1', reqRep: 1000 }, { itemId: 'a_hunt_1', reqRep: 2000 }, { itemId: 'r_hunt_1', reqRep: 3000 }, { itemId: 'h_hunt_1', reqRep: 5000 } ], seekers: [ { itemId: 'pot3', reqRep: 500 }, { itemId: 'f_seek_1', reqRep: 1000 }, { itemId: 's_seek_1', reqRep: 2000 }, { itemId: 'r_seek_1', reqRep: 3000 }, { itemId: 'a_seek_1', reqRep: 5000 } ] };
 
         // ИГРОВЫЕ ПЕРЕМЕННЫЕ
-        let p1 = { id: 1, name: "Герой", level: 1, exp: 0, money: 10000, rating: 0, baseStats: { ...baseStatsTemplate }, inventory: [ createItemInst(itemsRegistry['weapon'][0]), createItemInst(itemsRegistry['belt'][0]) ], equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }, quests: [], hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0, injuries: {}, professions: { herbalist: 0, geologist: 0 }, reputations: { hunters: 0, seekers: 0 }, instanceCooldowns: {}, worldBossCooldown: 0, sessionDamage: 0, claimedBossRounds: [], localWorldBoss: null };
-        let p2 = { id: 2, name: "Бот (Морок)", level: 1, exp: 0, money: 0, monsterId: 'morok', baseStats: { ...baseStatsTemplate }, inventory: [], equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }, hp: 100, hitHistory: [], potionCount: 0, potionCooldown: 0, injuries: {}, isWorldBoss: false, isLocalBoss: false, isPvP: false };
+        let p1 = { id: 1, name: "Герой", level: 1, exp: 0, money: 10000, rating: 0, baseStats: { ...baseStatsTemplate }, inventory: [ createItemInst(itemsRegistry['weapon'][0]), createItemInst(itemsRegistry['belt'][0]) ], equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }, quests: [], hp: 150, hitHistory: [], potionCount: 0, potionCooldown: 0, injuries: {}, professions: { herbalist: 0, geologist: 0 }, reputations: { hunters: 0, seekers: 0 }, instanceCooldowns: {}, worldBossCooldown: 0, sessionDamage: 0, claimedBossRounds: [], localWorldBoss: null };
+        let p2 = { id: 2, name: "Бот (Морок)", level: 1, exp: 0, money: 0, monsterId: 'morok', baseStats: { ...baseStatsTemplate }, inventory: [], equipment: { head: null, armor: null, weapon: null, shield: null, foot: null, belt: null, tool: null }, hp: 150, hitHistory: [], potionCount: 0, potionCooldown: 0, injuries: {}, isWorldBoss: false, isLocalBoss: false, isPvP: false };
         let roundCount = 1; let attacksThisRound = 0; let gameOver = false; let activePlayer = null; let battleStarted = false; let potionCooldownTimer = null; let potionHealTimer = null; let injuryDotTimer = null; let isGathering = false; let gatherTimerInterval = null; let botTimeout = null;
 
         // --- СОХРАНЕНИЯ ---
-        function assignSaveData(s) { p1.rating = s.rating || 0; p1.level = s.level || 1; p1.exp = s.exp || 0; p1.money = s.money !== undefined ? s.money : 10000; if (s.baseStats) p1.baseStats = s.baseStats; if (s.inventory) p1.inventory = s.inventory; if (s.equipment) { p1.equipment = s.equipment; if (!p1.equipment.tool) p1.equipment.tool = null; } if (s.quests) p1.quests = s.quests; else p1.quests = []; if (s.injuries !== undefined) p1.injuries = s.injuries; else p1.injuries = {}; if (s.professions) p1.professions = s.professions; else p1.professions = { herbalist: 0, geologist: 0 }; if (s.reputations) p1.reputations = s.reputations; else p1.reputations = { hunters: 0, seekers: 0 }; if (s.instanceCooldowns) p1.instanceCooldowns = s.instanceCooldowns; else p1.instanceCooldowns = {}; if (s.worldBossCooldown) p1.worldBossCooldown = s.worldBossCooldown; else p1.worldBossCooldown = 0; if (s.claimedBossRounds) p1.claimedBossRounds = s.claimedBossRounds; else p1.claimedBossRounds = []; if (s.localWorldBoss) p1.localWorldBoss = s.localWorldBoss; else p1.localWorldBoss = null; }
+        function assignSaveData(s) { p1.rating = s.rating || 0; p1.level = s.level || 1; p1.exp = s.exp || 0; p1.money = s.money !== undefined ? s.money : 10000; if (s.baseStats) p1.baseStats = { ...baseStatsTemplate, ...s.baseStats }; if (s.inventory) p1.inventory = s.inventory; if (s.equipment) { p1.equipment = s.equipment; if (!p1.equipment.tool) p1.equipment.tool = null; } if (s.quests) p1.quests = s.quests; else p1.quests = []; if (s.injuries !== undefined) p1.injuries = s.injuries; else p1.injuries = {}; if (s.professions) p1.professions = s.professions; else p1.professions = { herbalist: 0, geologist: 0 }; if (s.reputations) p1.reputations = s.reputations; else p1.reputations = { hunters: 0, seekers: 0 }; if (s.instanceCooldowns) p1.instanceCooldowns = s.instanceCooldowns; else p1.instanceCooldowns = {}; if (s.worldBossCooldown) p1.worldBossCooldown = s.worldBossCooldown; else p1.worldBossCooldown = 0; if (s.claimedBossRounds) p1.claimedBossRounds = s.claimedBossRounds; else p1.claimedBossRounds = []; if (s.localWorldBoss) p1.localWorldBoss = s.localWorldBoss; else p1.localWorldBoss = null; }
         async function saveGameProgress() { const saveData = { email: currentUser ? currentUser.email : "Гость", rating: p1.rating || 0, level: p1.level, exp: p1.exp, money: p1.money, baseStats: p1.baseStats, inventory: p1.inventory, equipment: p1.equipment, quests: p1.quests, injuries: p1.injuries, professions: p1.professions, reputations: p1.reputations, instanceCooldowns: p1.instanceCooldowns, worldBossCooldown: p1.worldBossCooldown, claimedBossRounds: p1.claimedBossRounds, localWorldBoss: p1.localWorldBoss }; if (!supabaseClient || !currentUser) { localStorage.setItem('arena_save', JSON.stringify(saveData)); return; } await supabaseClient.from('saves').upsert({ id: currentUser.id, game_data: saveData }); }
         async function loadGameProgress(userId) { if (supabaseClient && userId) { try { const { data, error } = await supabaseClient.from('saves').select('game_data').eq('id', userId).single(); if (data && data.game_data) assignSaveData(data.game_data); } catch (e) { let local = localStorage.getItem('arena_save'); if (local) { try { assignSaveData(JSON.parse(local)); } catch(err) {} } } } else { let local = localStorage.getItem('arena_save'); if (local) { try { assignSaveData(JSON.parse(local)); } catch(e) {} } } saveGameProgress(); updateUI(); }
         async function handleGuestLogin() { if (!supabaseClient) { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex'; if(document.getElementById('user-email-display')) document.getElementById('user-email-display').innerText = "Гость (Оффлайн)"; loadGameProgress(null); switchTab('inventory'); return; } try { await supabaseClient.auth.signInAnonymously(); } catch(e) { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'flex'; if(document.getElementById('user-email-display')) document.getElementById('user-email-display').innerText = "Гость (Оффлайн)"; loadGameProgress(null); switchTab('inventory'); } }
         async function handleLogout() { if (supabaseClient) await supabaseClient.auth.signOut(); location.reload(); }
 
         // ================= УТИЛИТЫ И ОБНОВЛЕНИЕ UI =================
-        function getTotalStats(player) { let total = { ...player.baseStats, bonusCrit: 0, bonusDodge: 0, bonusBlock: 0, bonusMinDmg: 0, bonusMaxDmg: 0 }; total.itemBonus = { str: 0, agi: 0, int: 0, def: 0, vit: 0, ini: 0, crit: 0, dodge: 0, block: 0, minDmg: 0, maxDmg: 0 }; total.injuryBonus = { str: 0, agi: 0, int: 0, def: 0, vit: 0, ini: 0, crit: 0, dodge: 0, block: 0, minDmg: 0, maxDmg: 0 }; Object.values(player.equipment).forEach(item => { if (!item) return; let mod = item.stats; ['str','agi','int','def','vit','ini','crit','dodge','block','minDmg','maxDmg'].forEach(s => { if(mod[s]) { total[s === 'crit'?'bonusCrit':s==='dodge'?'bonusDodge':s==='block'?'bonusBlock':s==='minDmg'?'bonusMinDmg':s==='maxDmg'?'bonusMaxDmg':s] += mod[s]; total.itemBonus[s] += mod[s]; } }); }); if (player.injuries) { for (let part in player.injuries) { if (player.injuries[part]) { let injDef = injuriesDB.find(i => i.id === player.injuries[part].id); if (injDef) { let mod = injDef.stats; ['str','agi','int','def','vit','ini','crit','dodge','block'].forEach(s => { if(mod[s]) { total[s === 'crit'?'bonusCrit':s==='dodge'?'bonusDodge':s==='block'?'bonusBlock':s] += mod[s]; total.injuryBonus[s] += mod[s]; } }); } } } } if (player.isWorldBoss && currentWorldBoss) { total.maxHp = currentWorldBoss.maxHp; } else { total.maxHp = Math.floor(50 + (total.vit * 8)); } return total; }
+        function getTotalStats(player) { 
+            let total = { 
+                ...player.baseStats, 
+                antiCrit: player.baseStats.antiCrit || 0,
+                antiDodge: player.baseStats.antiDodge || 0,
+                antiBlock: player.baseStats.antiBlock || 0,
+                bonusCrit: 0, bonusDodge: 0, bonusBlock: 0, bonusMinDmg: 0, bonusMaxDmg: 0, 
+                bonusAntiCrit: 0, bonusAntiDodge: 0, bonusAntiBlock: 0 
+            }; 
+            total.itemBonus = { str: 0, agi: 0, int: 0, def: 0, vit: 0, ini: 0, crit: 0, dodge: 0, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0, minDmg: 0, maxDmg: 0 }; 
+            total.injuryBonus = { str: 0, agi: 0, int: 0, def: 0, vit: 0, ini: 0, crit: 0, dodge: 0, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0, minDmg: 0, maxDmg: 0 }; 
+            
+            Object.values(player.equipment).forEach(item => { 
+                if (!item) return; 
+                let mod = item.stats; 
+                ['str','agi','int','def','vit','ini','crit','dodge','block','antiCrit','antiDodge','antiBlock','minDmg','maxDmg'].forEach(s => { 
+                    if(mod[s]) { 
+                        if(s === 'crit') total.bonusCrit += mod[s];
+                        else if(s === 'dodge') total.bonusDodge += mod[s];
+                        else if(s === 'block') total.bonusBlock += mod[s];
+                        else if(s === 'antiCrit') total.bonusAntiCrit += mod[s];
+                        else if(s === 'antiDodge') total.bonusAntiDodge += mod[s];
+                        else if(s === 'antiBlock') total.bonusAntiBlock += mod[s];
+                        else if(s === 'minDmg') total.bonusMinDmg += mod[s];
+                        else if(s === 'maxDmg') total.bonusMaxDmg += mod[s];
+                        total[s] += mod[s]; 
+                        total.itemBonus[s] += mod[s]; 
+                    } 
+                }); 
+            }); 
+            if (player.injuries) { 
+                for (let part in player.injuries) { 
+                    if (player.injuries[part]) { 
+                        let injDef = injuriesDB.find(i => i.id === player.injuries[part].id); 
+                        if (injDef) { 
+                            let mod = injDef.stats; 
+                            ['str','agi','int','def','vit','ini','crit','dodge','block','antiCrit','antiDodge','antiBlock'].forEach(s => { 
+                                if(mod[s]) { 
+                                    if(s === 'crit') total.bonusCrit += mod[s];
+                                    else if(s === 'dodge') total.bonusDodge += mod[s];
+                                    else if(s === 'block') total.bonusBlock += mod[s];
+                                    else if(s === 'antiCrit') total.bonusAntiCrit += mod[s];
+                                    else if(s === 'antiDodge') total.bonusAntiDodge += mod[s];
+                                    else if(s === 'antiBlock') total.bonusAntiBlock += mod[s];
+                                    total[s] += mod[s];
+                                    total.injuryBonus[s] += mod[s]; 
+                                } 
+                            }); 
+                        } 
+                    } 
+                } 
+            } 
+            if (player.isWorldBoss && currentWorldBoss) { 
+                total.maxHp = currentWorldBoss.maxHp; 
+            } else { 
+                total.maxHp = Math.floor(50 + (total.vit * 10)); // 1 ЖИВУЧЕСТЬ = 10 HP
+            } 
+            return total; 
+        }
+        
         function getCalculatedDamage(stats) { let strBonus = Math.floor(stats.str * 0.5); let min = 1 + stats.bonusMinDmg + strBonus; let max = 3 + stats.bonusMaxDmg + strBonus; return { min, max }; }
 
         function updateUI() {
@@ -526,8 +585,15 @@
             
             s1 = getTotalStats(p1); s2 = getTotalStats(p2);
             
-            let d1 = Math.min(75, Math.max(0, 3 + Math.floor(s1.agi * 1.5) - Math.floor(s2.int * 1) + s1.bonusDodge + p1.baseStats.dodge + s1.injuryBonus.dodge)); let b1 = Math.min(75, Math.max(0, 3 + Math.floor(s1.def * 1.5) - Math.floor(s2.str * 1) + s1.bonusBlock + p1.baseStats.block + s1.injuryBonus.block)); let c1 = Math.min(75, Math.max(0, 3 + Math.floor(s1.int * 1.5) - Math.floor(s2.def * 1) + s1.bonusCrit + p1.baseStats.crit + s1.injuryBonus.crit));
-            let d2 = Math.min(75, Math.max(0, 3 + Math.floor(s2.agi * 1.5) - Math.floor(s1.int * 1) + s2.bonusDodge + p2.baseStats.dodge + s2.injuryBonus.dodge)); let b2 = Math.min(75, Math.max(0, 3 + Math.floor(s2.def * 1.5) - Math.floor(s1.str * 1) + s2.bonusBlock + p2.baseStats.block + s2.injuryBonus.block)); let c2 = Math.min(75, Math.max(0, 3 + Math.floor(s2.int * 1.5) - Math.floor(s1.def * 1) + s2.bonusCrit + p2.baseStats.crit + s2.injuryBonus.crit));
+            // АБСОЛЮТНЫЕ ФОРМУЛЫ ШАНСОВ ДЛЯ ОТОБРАЖЕНИЯ В КАРТОЧКЕ (базовые 10 статов не дают +15%)
+            let d1 = Math.max(0, 3 + Math.floor((s1.agi - 10) * 1.5) + (s1.dodge || 0)); 
+            let b1 = Math.max(0, 3 + Math.floor((s1.def - 10) * 1.5) + (s1.block || 0)); 
+            let c1 = Math.max(0, 3 + Math.floor((s1.int - 10) * 1.5) + (s1.crit || 0));
+            
+            let d2 = Math.max(0, 3 + Math.floor((s2.agi - 10) * 1.5) + (s2.dodge || 0)); 
+            let b2 = Math.max(0, 3 + Math.floor((s2.def - 10) * 1.5) + (s2.block || 0)); 
+            let c2 = Math.max(0, 3 + Math.floor((s2.int - 10) * 1.5) + (s2.crit || 0));
+            
             let dmg1 = getCalculatedDamage(s1); let dmg2 = getCalculatedDamage(s2);
             
             const buildStatHtml = (pId, base, b, injB, mD1, mD2, cr, dg, bl) => { 
@@ -539,19 +605,22 @@
                     return `<button class="${cl}" onclick="changeStat(${pId}, '${k}', ${d})">${sign}</button>`; 
                 }; 
                 let row = (name, key, val, ext) => `<div class="stat-row"><span>${name}: ${val}${ext||''}</span><div class="stat-controls">${bBtn(key,false)}${bBtn(key,true)}</div></div>`;
-                let noBtnRow = (name, val) => `<div class="stat-row"><span>${name}:</span> <span><b>${val}</b></span></div>`;
 
                 let html = `<div style="width:100%;"><div style="color:#f1c40f; text-align:center; font-weight:bold; border-bottom:1px dashed #7f8c8d; margin-bottom:5px; padding-bottom:5px;">Урон: ${mD1}-${mD2}</div>`;
                 html += row('Сила', 'str', base.str, rBonus(b.str, injB.str));
                 html += row('Ловкость', 'agi', base.agi, rBonus(b.agi, injB.agi));
                 html += row('Интуиция', 'int', base.int, rBonus(b.int, injB.int));
                 html += row('Защита', 'def', base.def, rBonus(b.def, injB.def));
-                html += row('Жизнь', 'vit', base.vit, rBonus(b.vit, injB.vit));
+                html += row('Живучесть', 'vit', base.vit, rBonus(b.vit, injB.vit));
                 html += row('Инициатива', 'ini', base.ini, rBonus(b.ini, injB.ini));
                 html += `<hr style="border: 0; border-top: 1px dashed #7f8c8d; margin: 8px 0;">`;
                 html += row('Шанс крита', 'crit', `<span style="color:#e74c3c;">${cr}%</span>`, rBonus(b.crit, injB.crit));
                 html += row('Шанс уворота', 'dodge', `<span style="color:#3498db;">${dg}%</span>`, rBonus(b.dodge, injB.dodge));
                 html += row('Шанс блока', 'block', `<span style="color:#e67e22;">${bl}%</span>`, rBonus(b.block, injB.block));
+                html += `<hr style="border: 0; border-top: 1px dashed #7f8c8d; margin: 8px 0;">`;
+                html += row('Антикрит', 'antiCrit', `<span style="color:#c0392b;">${base.antiCrit || 0}%</span>`, rBonus(b.antiCrit, injB.antiCrit));
+                html += row('Антиуворот', 'antiDodge', `<span style="color:#2980b9;">${base.antiDodge || 0}%</span>`, rBonus(b.antiDodge, injB.antiDodge));
+                html += row('Антиблок', 'antiBlock', `<span style="color:#d35400;">${base.antiBlock || 0}%</span>`, rBonus(b.antiBlock, injB.antiBlock));
                 html += `</div>`;
                 return html;
             };
@@ -595,9 +664,47 @@
             renderInventory(); renderPaperDoll(p1); renderShop();
             if (battleStarted) { renderComboHint(); renderParticipantsList(); renderQuickSlots(); }
         }
-        function checkLevelUp(logArray) { let nextExp = expTable[p1.level + 1]; if (nextExp && p1.exp >= nextExp) { p1.level++; let statsToRaise = ['str', 'agi', 'int', 'def', 'vit']; statsToRaise.sort(() => 0.5 - Math.random()); let raised = []; for(let i = 0; i < 3; i++) { p1.baseStats[statsToRaise[i]]++; raised.push(statsToRaise[i]); } let raisedNames = raised.map(k => statNamesRU[k]).join(', '); if (logArray) logArray.push(`<p style="color:#2ecc71; font-weight:bold; font-size:1.2em; text-shadow:1px 1px 1px #000;">🌟 НОВЫЙ УРОВЕНЬ! Вы достигли ${p1.level} уровня! Автоматически повышено: ${raisedNames}.</p>`); return true; } return false; }
-        function changeLevel(playerId, delta) { if (battleStarted) return; let player = playerId === 1 ? p1 : p2; if (player.level + delta < 1) return; player.level += delta; let statsToChange = ['str', 'agi', 'int', 'def', 'vit']; statsToChange.sort(() => 0.5 - Math.random()); for(let i = 0; i < 3; i++) { if (delta > 0) { player.baseStats[statsToChange[i]]++; } else { let statToDecrease = statsToChange.find(s => player.baseStats[s] > 6); if (statToDecrease) { player.baseStats[statToDecrease]--; } else { let anyStatToDecrease = ['str', 'agi', 'int', 'def', 'vit'].find(s => player.baseStats[s] > 6); if (anyStatToDecrease) player.baseStats[anyStatToDecrease]--; } } } updateUI(); if(playerId === 1) saveGameProgress(); }
-        function changeStat(playerId, statKey, delta) { if (battleStarted) return; let player = playerId === 1 ? p1 : p2; if (delta < 0 && player.baseStats[statKey] <= 1 && !['crit', 'dodge', 'block'].includes(statKey)) return; if (delta < 0 && player.baseStats[statKey] <= 0 && ['crit', 'dodge', 'block'].includes(statKey)) return; player.baseStats[statKey] += delta; updateUI(); if(playerId === 1) saveGameProgress(); }
+        
+        function checkLevelUp(logArray) { 
+            let nextExp = expTable[p1.level + 1]; 
+            if (nextExp && p1.exp >= nextExp) { 
+                p1.level++; 
+                p1.baseStats.str += 2; 
+                p1.baseStats.vit += 2; 
+                if (logArray) logArray.push(`<p style="color:#2ecc71; font-weight:bold; font-size:1.2em; text-shadow:1px 1px 1px #000;">🌟 НОВЫЙ УРОВЕНЬ! Вы достигли ${p1.level} уровня! Получено: +2 Силы, +2 Живучести.</p>`); 
+                return true; 
+            } 
+            return false; 
+        }
+        
+        function changeLevel(playerId, delta) { 
+            if (battleStarted) return; 
+            let player = playerId === 1 ? p1 : p2; 
+            if (player.level + delta < 1) return; 
+            player.level += delta; 
+            if (delta > 0) { 
+                player.baseStats.str += 2; 
+                player.baseStats.vit += 2; 
+            } else { 
+                player.baseStats.str = Math.max(10, player.baseStats.str - 2); 
+                player.baseStats.vit = Math.max(10, player.baseStats.vit - 2); 
+            } 
+            updateUI(); 
+            if(playerId === 1) saveGameProgress(); 
+        }
+        
+        function changeStat(playerId, statKey, delta) { 
+            if (battleStarted) return; 
+            let player = playerId === 1 ? p1 : p2; 
+            let limit = 10;
+            if (statKey === 'ini') limit = 2;
+            if (['crit', 'dodge', 'block', 'antiCrit', 'antiDodge', 'antiBlock'].includes(statKey)) limit = 0;
+            
+            if (delta < 0 && (player.baseStats[statKey] || 0) <= limit) return; 
+            player.baseStats[statKey] = (player.baseStats[statKey] || 0) + delta; 
+            updateUI(); 
+            if(playerId === 1) saveGameProgress(); 
+        }
 
         // ================= ИНВЕНТАРЬ =================
         function renderInventory() { let invDiv = document.getElementById('inventory-p1'); if(!invDiv) return; let html = ''; if(p1.inventory.length === 0) { html = '<div class="doll-empty" style="text-align:center;">Рюкзак пуст</div>'; } else { p1.inventory.forEach((item, idx) => { let statStr = formatStatsForSelect(item.stats, item.potion, item.type, item.prof); let btn = ''; if(['weapon', 'armor', 'head', 'belt', 'shield', 'foot', 'tool'].includes(item.slot)) { btn = `<button class="btn-system" style="padding:4px 8px; font-size:0.8em;" onclick="equipFromInv(${idx})">Надеть</button>`; } else if (item.type === 'heal_injury') { btn = `<button class="btn-system" style="padding:4px 8px; font-size:0.8em; background:#27ae60;" onclick="useConsumableOutside(${idx})">Использ.</button>`; } else if (item.slot === 'runes') { btn = `<button class="btn-system" style="padding:4px 8px; font-size:0.8em; background:#8e44ad;" onclick="openRuneModal(${idx})">Встроить</button>`; } html += `<div class="item-row"><div class="item-info"><span class="item-name">${item.name}</span><span class="item-stats">${statStr}</span></div>${btn}</div>`; }); } invDiv.innerHTML = html; }
@@ -837,8 +944,8 @@
             
             if (data.length === 0) { 
                 data = [ 
-                    { id: 'bot1', game_data: { email: 'Спартак (ИИ)', level: 2, rating: 50, baseStats: { str: 8, agi: 6, int: 6, def: 6, vit: 8, ini: 2, crit: 0, dodge: 0, block: 0 }, equipment: { head: null, armor: null, weapon: createItemInst(itemsRegistry.weapon[0]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } }, 
-                    { id: 'bot2', game_data: { email: 'Ахиллес (ИИ)', level: 3, rating: 120, baseStats: { str: 10, agi: 8, int: 5, def: 8, vit: 10, ini: 5, crit: 5, dodge: 0, block: 0 }, equipment: { head: null, armor: createItemInst(itemsRegistry.armor[0]), weapon: createItemInst(itemsRegistry.weapon[1]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } } 
+                    { id: 'bot1', game_data: { email: 'Спартак (ИИ)', level: 2, rating: 50, baseStats: { str: 10, agi: 10, int: 10, def: 10, vit: 10, ini: 2, crit: 0, dodge: 0, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0 }, equipment: { head: null, armor: null, weapon: createItemInst(itemsRegistry.weapon[0]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } }, 
+                    { id: 'bot2', game_data: { email: 'Ахиллес (ИИ)', level: 3, rating: 120, baseStats: { str: 12, agi: 10, int: 10, def: 10, vit: 12, ini: 5, crit: 0, dodge: 0, block: 0, antiCrit: 0, antiDodge: 0, antiBlock: 0 }, equipment: { head: null, armor: createItemInst(itemsRegistry.armor[0]), weapon: createItemInst(itemsRegistry.weapon[1]), shield: null, foot: null, belt: null, tool: null }, injuries: {} } } 
                 ]; 
                 window.cachedPvPPlayers = data;
             }
@@ -1128,16 +1235,21 @@
 
             if (activeCombo) comboLog = `<div class="log-super">⚡ СУПЕРУДАР! ${attacker.name} активирует комбо «${activeCombo.title}»!</div>`;
 
-            let dodgeChance = Math.min(75, Math.max(0, 3 + Math.floor(dStats.agi * 1.5) - Math.floor(aStats.int * 1) + dStats.bonusDodge + dStats.dodge));
+            // ИСПРАВЛЕННЫЕ ФОРМУЛЫ ШАНСОВ В БОЮ
+            let dodgeChance = Math.max(0, 3 + Math.floor((dStats.agi - aStats.str) * 1.5) + dStats.dodge - aStats.antiDodge);
             if (getRandomInt(1, 100) <= dodgeChance) { showFloatingText(defender.id, "УВОРОТ", 'dodge'); return `${comboLog}<span class="log-dodge">💨 ${defender.name} ловко увернулся от удара ${zoneText} ${attacker.name}!</span>`; }
-            let blockChance = Math.min(75, Math.max(0, 3 + Math.floor(dStats.def * 1.5) - Math.floor(aStats.str * 1) + dStats.bonusBlock + dStats.block));
+            
+            let blockChance = Math.max(0, 3 + Math.floor((dStats.def - aStats.int) * 1.5) + dStats.block - aStats.antiBlock);
             if (getRandomInt(1, 100) <= blockChance) { showFloatingText(defender.id, "БЛОК", 'block'); return `${comboLog}<span class="log-block">🛡️ ${defender.name} заблокировал удар ${zoneText} ${attacker.name}!</span>`; }
 
             let dmgD = getCalculatedDamage(aStats); let rawDamage = Math.round(dmgD.min + Math.random() * (dmgD.max - dmgD.min)); 
-            let critChance = Math.min(75, Math.max(0, 3 + Math.floor(aStats.int * 1.5) - Math.floor(dStats.def * 1) + aStats.bonusCrit + aStats.crit)); let isCrit = getRandomInt(1, 100) <= critChance;
+            
+            let critChance = Math.max(0, 3 + Math.floor((aStats.int - dStats.agi) * 1.5) + aStats.crit - dStats.antiCrit); 
+            let isCrit = getRandomInt(1, 100) <= critChance;
             let armorMultiplier = 1 - (dStats.def / (dStats.def + 50));
+            
             if (isCrit) { 
-                rawDamage = Math.floor(rawDamage * 1.5); 
+                rawDamage = Math.floor(rawDamage * (1.7 + Math.random() * 0.2)); 
                 armorMultiplier = 1 - ((dStats.def / 2) / ((dStats.def / 2) + 50)); 
                 showFloatingText(attacker.id, "КРИТ!", 'crit_text'); 
             }
