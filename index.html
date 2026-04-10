@@ -558,7 +558,7 @@
             if (player.isWorldBoss && currentWorldBoss) { 
                 total.maxHp = currentWorldBoss.maxHp; 
             } else { 
-                total.maxHp = Math.floor(50 + (total.vit * 10)); // 1 ЖИВУЧЕСТЬ = 10 HP
+                total.maxHp = Math.max(1, Math.floor(50 + (total.vit * 10))); // 1 ЖИВУЧЕСТЬ = 10 HP, не менее 1
             } 
             return total; 
         }
@@ -697,12 +697,14 @@
         function changeStat(playerId, statKey, delta) { 
             if (battleStarted) return; 
             let player = playerId === 1 ? p1 : p2; 
-            let limit = 10;
-            if (statKey === 'ini') limit = 2;
-            if (['crit', 'dodge', 'block', 'antiCrit', 'antiDodge', 'antiBlock'].includes(statKey)) limit = 0;
             
-            if (delta < 0 && (player.baseStats[statKey] || 0) <= limit) return; 
+            // Убрали лимиты для тестирования (можно уходить в минус)
             player.baseStats[statKey] = (player.baseStats[statKey] || 0) + delta; 
+            
+            // Корректируем HP, если макс. ХП упало ниже текущего
+            let newMaxHp = Math.max(1, Math.floor(50 + (getTotalStats(player).vit * 10)));
+            if (player.hp > newMaxHp) player.hp = newMaxHp;
+
             updateUI(); 
             if(playerId === 1) saveGameProgress(); 
         }
@@ -821,7 +823,7 @@
                 let resBase = itemsRegistry[rec.resultSlot].find(i => i.id === rec.resultId); 
                 let canCraft = pCount >= rec.reqCount; 
                 let btnColor = canCraft ? 'linear-gradient(to bottom, #e67e22, #d35400)' : '#7f8c8d'; 
-                html += `<div class="item-row" style="border-left-color:#e67e22; margin-bottom:8px;"><div class="item-info"><span class="item-name">${rec.name}</span><span class="item-stats">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span></div><button class="btn-system" style="padding:4px 8px; font-size:0.8em;" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button></div>`; 
+                html += `<div class="item-row" style="border-left-color:#e67e22; margin-bottom:8px;"><div class="item-info"><span class="item-name">${rec.name}</span><span class="item-stats">Нужно: ${matBase.name} (${pCount}/${rec.reqCount})</span></div><button class="btn-system" style="padding:4px 8px; font-size:0.8em; background:${btnColor};" onclick="craftItem('${rec.id}')" ${!canCraft ? 'disabled' : ''}>Создать</button></div>`; 
             }); 
             cList.innerHTML = html; 
         }
